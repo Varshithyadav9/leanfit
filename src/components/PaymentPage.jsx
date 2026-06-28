@@ -34,7 +34,7 @@ function PaymentPage({ formData, setPage, setGeneratedPlan }) {
       orderFormData.append("userData", JSON.stringify(formData));
       orderFormData.append("paymentScreenshot", paymentScreenshot);
 
-      const response = await fetch("http://127.0.0.1:5000/api/generate-plan", {
+      const response = await fetch("https://leanfit.onrender.com/api/generate-plan", {
         method: "POST",
         body: orderFormData,
       });

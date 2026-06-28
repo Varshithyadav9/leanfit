@@ -9,7 +9,7 @@ function AdminDashboard({ setPage }) {
   const fetchOrders = () => {
     setLoading(true);
 
-    fetch("http://127.0.0.1:5000/api/orders")
+    fetch("https://leanfit.onrender.com/api/orders")
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setOrders(data.orders);
@@ -23,7 +23,7 @@ function AdminDashboard({ setPage }) {
 
   const updateStatus = async (orderId, status) => {
     const res = await fetch(
-      `http://127.0.0.1:5000/api/orders/${orderId}/status`,
+      `https://leanfit.onrender.com/api/orders/${orderId}/status`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -152,7 +152,7 @@ function AdminDashboard({ setPage }) {
                 <div className="screenshot-box">
                   <h4>Payment Screenshot</h4>
                   <img
-                    src={`http://127.0.0.1:5000${selectedOrder.paymentScreenshot}`}
+                    src={`https://leanfit.onrender.com${selectedOrder.paymentScreenshot}`}
                     alt="Payment Screenshot"
                   />
                 </div>
@@ -177,7 +177,7 @@ function AdminDashboard({ setPage }) {
 
                 {selectedOrder.pdfPath && (
                   <a
-                    href={`http://127.0.0.1:5000/${selectedOrder.pdfPath}`}
+                    href={`https://leanfit.onrender.com/${selectedOrder.pdfPath}`}
                     target="_blank"
                     rel="noreferrer"
                   >

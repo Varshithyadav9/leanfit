@@ -40,7 +40,7 @@ function Dashboard({ formData, setPage }) {
   const loadProgress = async (email) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/progress/${email}/${today}`
+        `https://leanfit.onrender.com/api/progress/${email}/${today}`
       );
 
       const data = await response.json();
@@ -58,7 +58,7 @@ function Dashboard({ formData, setPage }) {
   const loadHistory = async (email) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/progress/history/${email}`
+        `https://leanfit.onrender.com/api/progress/history/${email}`
       );
 
       const data = await response.json();
@@ -75,7 +75,7 @@ function Dashboard({ formData, setPage }) {
     if (!customer?.email) return;
 
     try {
-      await fetch("http://127.0.0.1:5000/api/progress", {
+      await fetch("https://leanfit.onrender.com/api/progress", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

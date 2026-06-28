@@ -22,7 +22,7 @@ function CustomerPortal({ setPage }) {
   const fetchOrders = async (email) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/api/customer/orders/${email}`
+        `https://leanfit.onrender.com/api/customer/orders/${email}`
       );
 
       const data = await response.json();
@@ -82,7 +82,7 @@ function CustomerPortal({ setPage }) {
 
                 {order.pdfPath && order.status === "Delivered" && (
                   <a
-                    href={`http://127.0.0.1:5000/${order.pdfPath}`}
+                    href={`https://leanfit.onrender.com/${order.pdfPath}`}
                     target="_blank"
                     rel="noreferrer"
                   >
