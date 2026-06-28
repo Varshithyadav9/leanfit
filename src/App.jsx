@@ -12,6 +12,8 @@ import Dashboard from "./components/Dashboard";
 import SuccessPage from "./components/SuccessPage";
 import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
+import CustomerPortal from "./components/CustomerPortal";
+import CustomerAuth from "./components/CustomerAuth";
 
 function App() {
   const [page, setPage] = useState("welcome");
@@ -125,6 +127,12 @@ function App() {
           setPage={setPage}
         />
       );
+
+    case "customer-auth":
+      return <CustomerAuth setPage={setPage} />;
+
+    case "customer-portal":
+      return <CustomerPortal setPage={setPage} />;
 
     case "admin-login":
       return <AdminLogin setPage={setPage} />;

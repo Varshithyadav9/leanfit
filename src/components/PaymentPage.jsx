@@ -2,12 +2,12 @@ import { useState } from "react";
 
 function PaymentPage({ formData, setPage, setGeneratedPlan }) {
   const [paymentDone, setPaymentDone] = useState(false);
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
 
   const upiId = "varshith0409@axl";
   const payeeName = "Lean Varshith";
-  const orderId = `LF-${Date.now().toString().slice(-6)}`;
 
   const selectedPlan = formData.selectedPlan || "No plan selected";
   const selectedPrice = formData.selectedPrice || 0;
@@ -19,34 +19,41 @@ function PaymentPage({ formData, setPage, setGeneratedPlan }) {
         )}&am=${selectedPrice}&cu=INR&tn=${encodeURIComponent(selectedPlan)}`
       : "#";
 
-  const generatePlan = async () => {
+  const submitOrder = async () => {
     setGenerating(true);
     setError("");
 
+    if (!paymentScreenshot) {
+      setError("Please upload payment screenshot.");
+      setGenerating(false);
+      return;
+    }
+
     try {
-      const response = await fetch("http://localhost:5000/api/generate-plan", {
+      const orderFormData = new FormData();
+      orderFormData.append("userData", JSON.stringify(formData));
+      orderFormData.append("paymentScreenshot", paymentScreenshot);
+
+      const response = await fetch("http://127.0.0.1:5000/api/generate-plan", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        body: orderFormData,
       });
 
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.message || "Plan generation failed");
+        throw new Error(data.message || "Order failed");
       }
 
-   setGeneratedPlan(data.plan);
+      setGeneratedPlan(data.plan);
 
-if (formData.selectedPlan === "Lean Pro Membership") {
-  setPage("dashboard");
-} else {
-  setPage("success");
-}
+      if (formData.selectedPlan === "Lean Pro Membership") {
+        setPage("dashboard");
+      } else {
+        setPage("success");
+      }
     } catch (err) {
-      setError("Unable to generate plan. Please check backend is running.");
+      setError(err.message || "Unable to submit order.");
     } finally {
       setGenerating(false);
     }
@@ -56,10 +63,12 @@ if (formData.selectedPlan === "Lean Pro Membership") {
     <main className="page">
       <section className="card">
         <p className="brand-label">PAYMENT</p>
+
         <h2>Complete Your Order</h2>
+
         <p className="muted">
-          Review your order, complete payment using UPI, then continue to
-          generate your personalized plan.
+          Pay using UPI, return to this page, upload the payment screenshot and
+          submit your order.
         </p>
 
         <div className="selected-plan-box">
@@ -70,23 +79,19 @@ if (formData.selectedPlan === "Lean Pro Membership") {
 
         <div className="summary-box">
           <h3>Order Summary</h3>
-          <p>
-            <strong>Order ID:</strong> {orderId}
-          </p>
+
           <p>
             <strong>Name:</strong> {formData.name || "Not specified"}
           </p>
+
           <p>
-            <strong>Goal:</strong> {formData.goal || "Not specified"}
+            <strong>Plan:</strong> {selectedPlan}
           </p>
+
           <p>
-            <strong>Current Weight:</strong>{" "}
-            {formData.weight || "Not specified"} kg
+            <strong>Amount:</strong> ₹{selectedPrice}
           </p>
-          <p>
-            <strong>Target Weight:</strong>{" "}
-            {formData.targetWeight || "Not specified"} kg
-          </p>
+
           <p>
             <strong>UPI ID:</strong> {upiId}
           </p>
@@ -95,7 +100,7 @@ if (formData.selectedPlan === "Lean Pro Membership") {
         <div className="payment-box">
           {selectedPrice > 0 ? (
             <a href={paymentLink}>
-              <button className="primary-btn full-btn">
+              <button className="primary-btn full-btn" type="button">
                 Pay ₹{selectedPrice} Now
               </button>
             </a>
@@ -107,6 +112,7 @@ if (formData.selectedPlan === "Lean Pro Membership") {
 
           <button
             className="secondary-btn full-btn"
+            type="button"
             disabled={selectedPrice <= 0}
             onClick={() => setPaymentDone(true)}
           >
@@ -116,18 +122,29 @@ if (formData.selectedPlan === "Lean Pro Membership") {
 
         {paymentDone && (
           <div className="proof-box">
-            <h3>Generate Your Plan</h3>
+            <h3>Upload Payment Screenshot</h3>
+
             <p className="muted">
-              After payment, click below. Your personalized plan will be
-              prepared and opened in your dashboard.
+              Upload your PhonePe / Google Pay / Paytm payment screenshot.
             </p>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setPaymentScreenshot(e.target.files[0])}
+            />
+
+            {paymentScreenshot && (
+              <p className="muted">Selected: {paymentScreenshot.name}</p>
+            )}
 
             <button
               className="primary-btn full-btn"
-              onClick={generatePlan}
+              onClick={submitOrder}
               disabled={generating}
+              type="button"
             >
-              {generating ? "Generating Plan..." : "Generate My Plan"}
+              {generating ? "Submitting Order..." : "Submit Order"}
             </button>
 
             {error && <p className="error-text">{error}</p>}

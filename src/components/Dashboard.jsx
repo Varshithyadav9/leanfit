@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import ProgressCharts from "./ProgressCharts";
 
 function Dashboard({ formData, setPage }) {
+  const [customer, setCustomer] = useState(null);
   const [water, setWater] = useState(0);
+  const [weight, setWeight] = useState("");
   const [mealPhoto, setMealPhoto] = useState(null);
+  const [loggedMeals, setLoggedMeals] = useState([]);
+  const [history, setHistory] = useState([]);
+
   const [mealForm, setMealForm] = useState({
     mealName: "",
     quantity: "",
@@ -12,12 +18,82 @@ function Dashboard({ formData, setPage }) {
     fat: "",
   });
 
-  const [loggedMeals, setLoggedMeals] = useState([]);
+  const today = new Date().toISOString().split("T")[0];
 
   const calorieGoal = 2500;
   const proteinGoal = 160;
   const carbsGoal = 280;
   const fatGoal = 70;
+
+  useEffect(() => {
+    const savedCustomer = localStorage.getItem("leanfitCustomer");
+
+    if (!savedCustomer) return;
+
+    const parsedCustomer = JSON.parse(savedCustomer);
+    setCustomer(parsedCustomer);
+
+    loadProgress(parsedCustomer.email);
+    loadHistory(parsedCustomer.email);
+  }, []);
+
+  const loadProgress = async (email) => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/progress/${email}/${today}`
+      );
+
+      const data = await response.json();
+
+      if (data.success && data.progress) {
+        setLoggedMeals(data.progress.meals || []);
+        setWater(data.progress.water || 0);
+        setWeight(data.progress.weight || "");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadHistory = async (email) => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/progress/history/${email}`
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setHistory(data.history || []);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const saveProgress = async (updatedMeals, updatedWater, updatedWeight) => {
+    if (!customer?.email) return;
+
+    try {
+      await fetch("http://127.0.0.1:5000/api/progress", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: customer.email,
+          date: today,
+          meals: updatedMeals,
+          water: updatedWater,
+          weight: updatedWeight,
+        }),
+      });
+
+      loadHistory(customer.email);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const totalCalories = loggedMeals.reduce(
     (sum, meal) => sum + Number(meal.calories || 0),
@@ -44,11 +120,13 @@ function Dashboard({ formData, setPage }) {
     100
   );
 
+  const progressWidth = (value, goal) => {
+    return `${Math.min((value / goal) * 100, 100)}%`;
+  };
+
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setMealPhoto(URL.createObjectURL(file));
-    }
+    if (file) setMealPhoto(URL.createObjectURL(file));
   };
 
   const updateMealForm = (field, value) => {
@@ -58,7 +136,10 @@ function Dashboard({ formData, setPage }) {
   const addMeal = () => {
     if (!mealForm.mealName || !mealForm.calories) return;
 
-    setLoggedMeals([...loggedMeals, mealForm]);
+    const newMeals = [...loggedMeals, mealForm];
+
+    setLoggedMeals(newMeals);
+    saveProgress(newMeals, water, weight);
 
     setMealForm({
       mealName: "",
@@ -72,8 +153,14 @@ function Dashboard({ formData, setPage }) {
     setMealPhoto(null);
   };
 
-  const progressWidth = (value, goal) => {
-    return `${Math.min((value / goal) * 100, 100)}%`;
+  const updateWater = (amount) => {
+    const newWater = Math.max(0, Number((water + amount).toFixed(2)));
+    setWater(newWater);
+    saveProgress(loggedMeals, newWater, weight);
+  };
+
+  const saveWeight = () => {
+    saveProgress(loggedMeals, water, weight);
   };
 
   return (
@@ -81,21 +168,62 @@ function Dashboard({ formData, setPage }) {
       <section className="dashboard-header-card">
         <div>
           <p className="brand-label">LEAN PRO DASHBOARD</p>
-          <h2>Welcome, {formData.name || "Member"}</h2>
+          <h2>Welcome, {customer?.name || formData.name || "Member"}</h2>
           <p>Track your nutrition, meals, water intake and progress.</p>
 
-          {formData.selectedPlan === "Lean Pro Membership" && (
-            <div className="access-card">
-              <h3>Lean Pro Access</h3>
-              <p>Membership active for 30 days from purchase.</p>
-              <strong>Access: Active</strong>
-            </div>
-          )}
+          <div className="access-card">
+            <h3>Lean Pro Access</h3>
+            <p>Membership active for 30 days from purchase.</p>
+            <strong>Access: Active</strong>
+          </div>
         </div>
 
-        <button className="secondary-btn" onClick={() => setPage("welcome")}>
-          Home
+        <button
+          className="secondary-btn"
+          onClick={() => setPage("customer-portal")}
+        >
+          My Orders
         </button>
+      </section>
+
+      <section className="summary-grid">
+        <div className="summary-card">
+          <span>Calories</span>
+          <strong>
+            {totalCalories} / {calorieGoal}
+          </strong>
+          <p>
+            {calorieGoal - totalCalories > 0
+              ? calorieGoal - totalCalories
+              : 0}{" "}
+            kcal left
+          </p>
+        </div>
+
+        <div className="summary-card">
+          <span>Protein</span>
+          <strong>
+            {totalProtein} / {proteinGoal}g
+          </strong>
+          <p>
+            {proteinGoal - totalProtein > 0
+              ? proteinGoal - totalProtein
+              : 0}
+            g left
+          </p>
+        </div>
+
+        <div className="summary-card">
+          <span>Water</span>
+          <strong>{water} / 3L</strong>
+          <p>{3 - water > 0 ? Number((3 - water).toFixed(2)) : 0}L left</p>
+        </div>
+
+        <div className="summary-card">
+          <span>Weight</span>
+          <strong>{weight || formData.weight || "0"} kg</strong>
+          <p>Today’s weight</p>
+        </div>
       </section>
 
       <section className="calorie-card">
@@ -131,9 +259,7 @@ function Dashboard({ formData, setPage }) {
         <div className="progress-item">
           <div>
             <span>Protein</span>
-            <strong>
-              {totalProtein} / {proteinGoal}g
-            </strong>
+            <strong>{totalProtein} / {proteinGoal}g</strong>
           </div>
           <div className="progress-bar">
             <div style={{ width: progressWidth(totalProtein, proteinGoal) }} />
@@ -143,9 +269,7 @@ function Dashboard({ formData, setPage }) {
         <div className="progress-item">
           <div>
             <span>Carbs</span>
-            <strong>
-              {totalCarbs} / {carbsGoal}g
-            </strong>
+            <strong>{totalCarbs} / {carbsGoal}g</strong>
           </div>
           <div className="progress-bar">
             <div style={{ width: progressWidth(totalCarbs, carbsGoal) }} />
@@ -155,9 +279,7 @@ function Dashboard({ formData, setPage }) {
         <div className="progress-item">
           <div>
             <span>Fat</span>
-            <strong>
-              {totalFat} / {fatGoal}g
-            </strong>
+            <strong>{totalFat} / {fatGoal}g</strong>
           </div>
           <div className="progress-bar">
             <div style={{ width: progressWidth(totalFat, fatGoal) }} />
@@ -178,7 +300,7 @@ function Dashboard({ formData, setPage }) {
       <section className="dashboard-section">
         <div className="section-head">
           <div>
-            <h3>Food Photo Tracker</h3>
+            <h3>Food Tracker</h3>
             <p>Upload food photo and enter nutrition details.</p>
           </div>
         </div>
@@ -265,7 +387,7 @@ function Dashboard({ formData, setPage }) {
         <div className="section-head">
           <div>
             <h3>Today’s Meals</h3>
-            <p>Your logged foods appear here.</p>
+            <p>Your logged foods are saved for today.</p>
           </div>
         </div>
 
@@ -298,9 +420,9 @@ function Dashboard({ formData, setPage }) {
         </div>
 
         <div className="water-actions">
-          <button onClick={() => setWater(water + 0.25)}>+250 ml</button>
-          <button onClick={() => setWater(water + 0.5)}>+500 ml</button>
-          <button onClick={() => setWater(0)}>Reset</button>
+          <button onClick={() => updateWater(0.25)}>+250 ml</button>
+          <button onClick={() => updateWater(0.5)}>+500 ml</button>
+          <button onClick={() => updateWater(-water)}>Reset</button>
         </div>
       </section>
 
@@ -308,22 +430,64 @@ function Dashboard({ formData, setPage }) {
         <div className="section-head">
           <div>
             <h3>Weight Progress</h3>
-            <p>Stay consistent with your target.</p>
+            <p>Save today’s body weight.</p>
           </div>
         </div>
 
-        <div className="weight-grid">
+        <div className="form-grid two-col">
           <div>
-            <span>Current Weight</span>
-            <strong>{formData.weight || "0"} kg</strong>
+            <label>Today’s Weight</label>
+            <input
+              type="number"
+              placeholder="Enter weight"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+            />
           </div>
 
           <div>
-            <span>Target Weight</span>
-            <strong>{formData.targetWeight || "0"} kg</strong>
+            <label>Target Weight</label>
+            <input value={formData.targetWeight || "Not specified"} disabled />
           </div>
         </div>
+
+        <button className="primary-btn full-btn" onClick={saveWeight}>
+          Save Weight
+        </button>
       </section>
+
+      <section className="dashboard-section">
+        <div className="section-head">
+          <div>
+            <h3>Last 7 Days</h3>
+            <p>Your recent calories, water and weight history.</p>
+          </div>
+        </div>
+
+        {history.length === 0 ? (
+          <div className="empty-state">No history available yet.</div>
+        ) : (
+          history.map((day) => {
+            const calories = day.meals.reduce(
+              (sum, meal) => sum + Number(meal.calories || 0),
+              0
+            );
+
+            return (
+              <div className="meal-card" key={day._id}>
+                <div>
+                  <h4>{day.date}</h4>
+                  <p>Calories: {calories} kcal</p>
+                  <p>Water: {day.water || 0} L</p>
+                </div>
+
+                <strong>{day.weight || "-"} kg</strong>
+              </div>
+            );
+          })
+        )}
+      </section>
+      <ProgressCharts history={history} />
     </main>
   );
 }

@@ -43,6 +43,11 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    pdfPath: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
