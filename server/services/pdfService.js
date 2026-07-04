@@ -453,9 +453,7 @@ export function createPlanPDF(userData, planText, orderId) {
 
 export function createPlanPDFV2(userData, orderId) {
   return createPlanPDF(userData, "", orderId);
-}export async function createPlanPDF(userData, plan, orderId) {
-  return createPlanPDFV2(userData, orderId);
-}
+
 
 export async function createPlanPDFV2(userData, orderId) {
   return new Promise((resolve, reject) => {
