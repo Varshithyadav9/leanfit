@@ -453,4 +453,55 @@ export function createPlanPDF(userData, planText, orderId) {
 
 export function createPlanPDFV2(userData, orderId) {
   return createPlanPDF(userData, "", orderId);
+}export async function createPlanPDF(userData, plan, orderId) {
+  return createPlanPDFV2(userData, orderId);
+}
+
+export async function createPlanPDFV2(userData, orderId) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({
+      size: "A4",
+      margin: 40,
+    });
+
+    const buffers = [];
+
+    doc.on("data", (chunk) => buffers.push(chunk));
+
+    doc.on("end", () => {
+      resolve(Buffer.concat(buffers));
+    });
+
+    doc.on("error", reject);
+
+    const selectedPlan = (
+      userData.selectedPlan || ""
+    ).toLowerCase();
+
+    if (
+      selectedPlan.includes("diet") &&
+      !selectedPlan.includes("workout")
+    ) {
+      drawDietPage(doc, userData, orderId, 1, 2);
+      doc.addPage();
+      drawFoodGuidePage(doc, orderId, 2, 2);
+    } else if (
+      selectedPlan.includes("workout") &&
+      !selectedPlan.includes("diet")
+    ) {
+      drawWorkoutPage(doc, userData, orderId, 1, 2);
+      doc.addPage();
+      drawRecoveryPage(doc, orderId, 2, 2);
+    } else {
+      drawDietPage(doc, userData, orderId, 1, 4);
+      doc.addPage();
+      drawFoodGuidePage(doc, orderId, 2, 4);
+      doc.addPage();
+      drawWorkoutPage(doc, userData, orderId, 3, 4);
+      doc.addPage();
+      drawRecoveryPage(doc, orderId, 4, 4);
+    }
+
+    doc.end();
+  });
 }
