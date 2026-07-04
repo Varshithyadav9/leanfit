@@ -10,57 +10,23 @@ const COLORS = {
 };
 
 function addHeader(doc, title, orderId) {
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(26)
-    .fillColor(COLORS.green)
-    .text("LEANFIT", 40, 35);
-
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(14)
-    .fillColor(COLORS.dark)
-    .text(title, 40, 70);
-
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor(COLORS.text)
-    .text(`Plan ID: ${orderId}`, 400, 45, { width: 150, align: "right" });
-
-  doc
-    .moveTo(40, 95)
-    .lineTo(555, 95)
-    .strokeColor(COLORS.border)
-    .stroke();
+  doc.font("Helvetica-Bold").fontSize(26).fillColor(COLORS.green).text("LEANFIT", 40, 35);
+  doc.font("Helvetica-Bold").fontSize(14).fillColor(COLORS.dark).text(title, 40, 70);
+  doc.font("Helvetica").fontSize(9).fillColor(COLORS.text).text(`Plan ID: ${orderId}`, 400, 45, {
+    width: 150,
+    align: "right",
+  });
+  doc.moveTo(40, 95).lineTo(555, 95).strokeColor(COLORS.border).stroke();
 }
 
 function addFooter(doc, page, total) {
-  doc
-    .moveTo(40, 790)
-    .lineTo(555, 790)
-    .strokeColor(COLORS.border)
-    .stroke();
-
-  doc
-    .font("Helvetica")
-    .fontSize(8)
-    .fillColor(COLORS.text)
-    .text("@lean_varshith", 40, 805);
-
-  doc.text(`Page ${page} of ${total}`, 430, 805, {
-    width: 120,
-    align: "right",
-  });
+  doc.moveTo(40, 790).lineTo(555, 790).strokeColor(COLORS.border).stroke();
+  doc.font("Helvetica").fontSize(8).fillColor(COLORS.text).text("@lean_varshith", 40, 805);
+  doc.text(`Page ${page} of ${total}`, 430, 805, { width: 120, align: "right" });
 }
 
 function sectionTitle(doc, text, y) {
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(12)
-    .fillColor(COLORS.dark)
-    .text(text, 40, y);
-
+  doc.font("Helvetica-Bold").fontSize(12).fillColor(COLORS.dark).text(text, 40, y);
   return y + 18;
 }
 
@@ -69,12 +35,9 @@ function table(doc, x, y, columns, rows, rowHeight = 34) {
 
   columns.forEach((col) => {
     doc.rect(cx, y, col.width, 28).fillAndStroke(COLORS.green, COLORS.green);
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(8)
-      .fillColor(COLORS.white)
-      .text(col.label, cx + 6, y + 9, { width: col.width - 12 });
-
+    doc.font("Helvetica-Bold").fontSize(8).fillColor(COLORS.white).text(col.label, cx + 6, y + 9, {
+      width: col.width - 12,
+    });
     cx += col.width;
   });
 
@@ -82,19 +45,15 @@ function table(doc, x, y, columns, rows, rowHeight = 34) {
 
   rows.forEach((row, index) => {
     cx = x;
-
     columns.forEach((col) => {
-      doc
-        .rect(cx, y, col.width, rowHeight)
-        .fillAndStroke(index % 2 === 0 ? COLORS.white : COLORS.light, COLORS.border);
+      doc.rect(cx, y, col.width, rowHeight).fillAndStroke(
+        index % 2 === 0 ? COLORS.white : COLORS.light,
+        COLORS.border
+      );
 
-      doc
-        .font("Helvetica")
-        .fontSize(7.5)
-        .fillColor(COLORS.dark)
-        .text(String(row[col.key] || ""), cx + 6, y + 8, {
-          width: col.width - 12,
-        });
+      doc.font("Helvetica").fontSize(7.5).fillColor(COLORS.dark).text(String(row[col.key] || ""), cx + 6, y + 8, {
+        width: col.width - 12,
+      });
 
       cx += col.width;
     });
@@ -106,57 +65,31 @@ function table(doc, x, y, columns, rows, rowHeight = 34) {
 }
 
 function caloriesByGoal(goal = "") {
-  if (goal.toLowerCase().includes("fat")) return "1800–2200 kcal";
-  if (goal.toLowerCase().includes("muscle")) return "2400–2800 kcal";
-  if (goal.toLowerCase().includes("recomposition")) return "2100–2400 kcal";
+  const g = goal.toLowerCase();
+  if (g.includes("fat")) return "1800–2200 kcal";
+  if (g.includes("muscle")) return "2400–2800 kcal";
+  if (g.includes("recomposition")) return "2100–2400 kcal";
   return "2200–2500 kcal";
 }
 
 function customerRows(userData, orderId) {
-  return [
-    {
-      id: orderId,
-      name: userData.name || "Customer",
-      age: userData.age || "-",
-      height: `${userData.height || "-"} cm`,
-      weight: `${userData.weight || "-"} kg`,
-      goal: userData.goal || "-",
-    },
-  ];
+  return [{
+    id: orderId,
+    name: userData.name || "Customer",
+    age: userData.age || "-",
+    height: `${userData.height || "-"} cm`,
+    weight: `${userData.weight || "-"} kg`,
+    goal: userData.goal || "-",
+  }];
 }
 
 function dietRows() {
   return [
-    {
-      time: "7:00 AM",
-      meal: "Breakfast",
-      main: "Oats 70g + Milk 250ml + Banana 1",
-      alt: "Poha 180g / Upma 180g / Idli 3 / Dalia 180g",
-    },
-    {
-      time: "10:30 AM",
-      meal: "Snack",
-      main: "Eggs 3 whole",
-      alt: "Paneer 120g / Soya 60g dry / Sprouts 180g / Chana 180g cooked",
-    },
-    {
-      time: "1:30 PM",
-      meal: "Lunch",
-      main: "Rice 180g cooked + Chicken 150g + Veg 150g",
-      alt: "Paneer 150g / Fish 150g / Soya 70g dry / Rajma 180g / Chana 180g",
-    },
-    {
-      time: "5:00 PM",
-      meal: "Evening",
-      main: "Banana 1 + Peanuts 25g",
-      alt: "Apple 1 / Sweet Potato 250g / Makhana 35g / Curd 200g",
-    },
-    {
-      time: "8:30 PM",
-      meal: "Dinner",
-      main: "Roti 3 + Paneer 150g + Veg 200g",
-      alt: "Chicken 150g / Fish 150g / Eggs 4 / Soya 70g dry / Dal 250g cooked",
-    },
+    { time: "7:00 AM", meal: "Breakfast", main: "Oats 70g + Milk 250ml + Banana 1", alt: "Poha 180g / Upma 180g / Idli 3 / Dalia 180g" },
+    { time: "10:30 AM", meal: "Snack", main: "Eggs 3 whole", alt: "Paneer 120g / Soya 60g dry / Sprouts 180g / Chana 180g cooked" },
+    { time: "1:30 PM", meal: "Lunch", main: "Rice 180g cooked + Chicken 150g + Veg 150g", alt: "Paneer 150g / Fish 150g / Soya 70g dry / Rajma 180g / Chana 180g" },
+    { time: "5:00 PM", meal: "Evening", main: "Banana 1 + Peanuts 25g", alt: "Apple 1 / Sweet Potato 250g / Makhana 35g / Curd 200g" },
+    { time: "8:30 PM", meal: "Dinner", main: "Roti 3 + Paneer 150g + Veg 200g", alt: "Chicken 150g / Fish 150g / Eggs 4 / Soya 70g dry / Dal 250g cooked" },
   ];
 }
 
@@ -212,69 +145,35 @@ function drawDietPage(doc, userData, orderId, page, total) {
   addHeader(doc, "Personalized Diet Plan", orderId);
 
   let y = 115;
-
   y = sectionTitle(doc, "Customer Details", y);
-  y = table(
-    doc,
-    40,
-    y,
-    [
-      { label: "Name", key: "name", width: 110 },
-      { label: "Age", key: "age", width: 50 },
-      { label: "Height", key: "height", width: 80 },
-      { label: "Weight", key: "weight", width: 80 },
-      { label: "Goal", key: "goal", width: 195 },
-    ],
-    customerRows(userData, orderId),
-    32
-  );
+  y = table(doc, 40, y, [
+    { label: "Name", key: "name", width: 110 },
+    { label: "Age", key: "age", width: 50 },
+    { label: "Height", key: "height", width: 80 },
+    { label: "Weight", key: "weight", width: 80 },
+    { label: "Goal", key: "goal", width: 195 },
+  ], customerRows(userData, orderId), 32);
 
   y += 22;
   y = sectionTitle(doc, "Calories & Macros", y);
-  y = table(
-    doc,
-    40,
-    y,
-    [
-      { label: "Calories", key: "cal", width: 130 },
-      { label: "Protein", key: "protein", width: 120 },
-      { label: "Carbs", key: "carbs", width: 120 },
-      { label: "Fats", key: "fat", width: 120 },
-    ],
-    [
-      {
-        cal: caloriesByGoal(userData.goal),
-        protein: "120–160g",
-        carbs: "220–300g",
-        fat: "55–75g",
-      },
-    ],
-    32
-  );
+  y = table(doc, 40, y, [
+    { label: "Calories", key: "cal", width: 130 },
+    { label: "Protein", key: "protein", width: 120 },
+    { label: "Carbs", key: "carbs", width: 120 },
+    { label: "Fats", key: "fat", width: 120 },
+  ], [{ cal: caloriesByGoal(userData.goal), protein: "120–160g", carbs: "220–300g", fat: "55–75g" }], 32);
 
   y += 22;
   y = sectionTitle(doc, "Daily Meal Plan", y);
-  table(
-    doc,
-    40,
-    y,
-    [
-      { label: "Time", key: "time", width: 65 },
-      { label: "Meal", key: "meal", width: 65 },
-      { label: "Main Option", key: "main", width: 195 },
-      { label: "Alternatives with Quantity", key: "alt", width: 230 },
-    ],
-    dietRows(),
-    62
-  );
+  table(doc, 40, y, [
+    { label: "Time", key: "time", width: 65 },
+    { label: "Meal", key: "meal", width: 65 },
+    { label: "Main Option", key: "main", width: 195 },
+    { label: "Alternatives with Quantity", key: "alt", width: 230 },
+  ], dietRows(), 62);
 
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(8.5)
-    .fillColor(COLORS.dark)
-    .text("Note: Choose ONE main option or ONE alternative. Do not eat all alternatives together.", 40, 735, {
-      width: 515,
-    });
+  doc.font("Helvetica-Bold").fontSize(8.5).fillColor(COLORS.dark)
+    .text("Note: Choose ONE main option or ONE alternative. Do not eat all alternatives together.", 40, 735, { width: 515 });
 
   addFooter(doc, page, total);
 }
@@ -283,51 +182,27 @@ function drawFoodGuidePage(doc, orderId, page, total) {
   addHeader(doc, "Food Options & Grocery Guide", orderId);
 
   let y = 115;
-
   y = sectionTitle(doc, "Protein Options", y);
-  y = table(
-    doc,
-    40,
-    y,
-    [
-      { label: "Protein Food", key: "food", width: 260 },
-      { label: "Quantity", key: "qty", width: 250 },
-    ],
-    proteinRows(),
-    30
-  );
+  y = table(doc, 40, y, [
+    { label: "Protein Food", key: "food", width: 260 },
+    { label: "Quantity", key: "qty", width: 250 },
+  ], proteinRows(), 30);
 
   y += 22;
   y = sectionTitle(doc, "Carbohydrate Options", y);
-  y = table(
-    doc,
-    40,
-    y,
-    [
-      { label: "Carb Food", key: "food", width: 260 },
-      { label: "Quantity", key: "qty", width: 250 },
-    ],
-    carbRows(),
-    30
-  );
+  y = table(doc, 40, y, [
+    { label: "Carb Food", key: "food", width: 260 },
+    { label: "Quantity", key: "qty", width: 250 },
+  ], carbRows(), 30);
 
   y += 22;
   y = sectionTitle(doc, "Weekly Grocery List", y);
-  table(
-    doc,
-    40,
-    y,
-    [
-      { label: "Buy These Foods", key: "item", width: 510 },
-    ],
-    [
-      { item: "Eggs, Paneer, Soya Chunks, Chana, Rajma, Dal" },
-      { item: "Rice, Roti Atta, Oats, Poha, Sweet Potato" },
-      { item: "Milk, Curd, Fruits, Vegetables, Peanuts" },
-      { item: "Chicken/Fish only if affordable and preferred" },
-    ],
-    30
-  );
+  table(doc, 40, y, [{ label: "Buy These Foods", key: "item", width: 510 }], [
+    { item: "Eggs, Paneer, Soya Chunks, Chana, Rajma, Dal" },
+    { item: "Rice, Roti Atta, Oats, Poha, Sweet Potato" },
+    { item: "Milk, Curd, Fruits, Vegetables, Peanuts" },
+    { item: "Chicken/Fish only if affordable and preferred" },
+  ], 30);
 
   addFooter(doc, page, total);
 }
@@ -336,42 +211,27 @@ function drawWorkoutPage(doc, userData, orderId, page, total) {
   addHeader(doc, "Personalized Workout Plan", orderId);
 
   let y = 115;
-
   y = sectionTitle(doc, "Weekly Workout Schedule", y);
-  y = table(
-    doc,
-    40,
-    y,
-    [
-      { label: "Day", key: "day", width: 60 },
-      { label: "Focus", key: "focus", width: 110 },
-      { label: "Exercises", key: "exercises", width: 250 },
-      { label: "Sets", key: "sets", width: 55 },
-      { label: "Reps", key: "reps", width: 80 },
-    ],
-    workoutRows(userData),
-    54
-  );
+  y = table(doc, 40, y, [
+    { label: "Day", key: "day", width: 60 },
+    { label: "Focus", key: "focus", width: 110 },
+    { label: "Exercises", key: "exercises", width: 250 },
+    { label: "Sets", key: "sets", width: 55 },
+    { label: "Reps", key: "reps", width: 80 },
+  ], workoutRows(userData), 54);
 
   y += 24;
   y = sectionTitle(doc, "Workout Rules", y);
-  table(
-    doc,
-    40,
-    y,
-    [
-      { label: "Rule", key: "rule", width: 150 },
-      { label: "Instruction", key: "instruction", width: 360 },
-    ],
-    [
-      { rule: "Warm-up", instruction: "5–10 minutes before lifting." },
-      { rule: "Rest", instruction: "60–90 seconds between sets." },
-      { rule: "Progression", instruction: "Increase weight or reps slowly when form is good." },
-      { rule: "Cardio", instruction: "20–30 minutes walking 3–4 times weekly." },
-      { rule: "Recovery", instruction: "Sleep 7–8 hours daily." },
-    ],
-    34
-  );
+  table(doc, 40, y, [
+    { label: "Rule", key: "rule", width: 150 },
+    { label: "Instruction", key: "instruction", width: 360 },
+  ], [
+    { rule: "Warm-up", instruction: "5–10 minutes before lifting." },
+    { rule: "Rest", instruction: "60–90 seconds between sets." },
+    { rule: "Progression", instruction: "Increase weight or reps slowly when form is good." },
+    { rule: "Cardio", instruction: "20–30 minutes walking 3–4 times weekly." },
+    { rule: "Recovery", instruction: "Sleep 7–8 hours daily." },
+  ], 34);
 
   addFooter(doc, page, total);
 }
@@ -380,40 +240,25 @@ function drawRecoveryPage(doc, orderId, page, total) {
   addHeader(doc, "Recovery & Progress Checklist", orderId);
 
   let y = 115;
-
   y = sectionTitle(doc, "Daily Checklist", y);
-  y = table(
-    doc,
-    40,
-    y,
-    [{ label: "Checklist", key: "item", width: 510 }],
-    [
-      { item: "[ ] Complete meals" },
-      { item: "[ ] Hit protein target" },
-      { item: "[ ] Drink 3–4 litres water" },
-      { item: "[ ] Workout / walk completed" },
-      { item: "[ ] Sleep 7–8 hours" },
-      { item: "[ ] Check weight once weekly" },
-    ],
-    34
-  );
+  y = table(doc, 40, y, [{ label: "Checklist", key: "item", width: 510 }], [
+    { item: "[ ] Complete meals" },
+    { item: "[ ] Hit protein target" },
+    { item: "[ ] Drink 3–4 litres water" },
+    { item: "[ ] Workout / walk completed" },
+    { item: "[ ] Sleep 7–8 hours" },
+    { item: "[ ] Check weight once weekly" },
+  ], 34);
 
   y += 28;
   y = sectionTitle(doc, "Important Tips", y);
-  table(
-    doc,
-    40,
-    y,
-    [{ label: "Tips", key: "tip", width: 510 }],
-    [
-      { tip: "Do not skip meals. Consistency matters more than perfection." },
-      { tip: "Use affordable alternatives when chicken or fish is not possible." },
-      { tip: "Track your weight weekly, not daily." },
-      { tip: "If energy is low, increase carbs slightly around workout." },
-      { tip: "Stay consistent for at least 30 days before judging results." },
-    ],
-    36
-  );
+  table(doc, 40, y, [{ label: "Tips", key: "tip", width: 510 }], [
+    { tip: "Do not skip meals. Consistency matters more than perfection." },
+    { tip: "Use affordable alternatives when chicken or fish is not possible." },
+    { tip: "Track your weight weekly, not daily." },
+    { tip: "If energy is low, increase carbs slightly around workout." },
+    { tip: "Stay consistent for at least 30 days before judging results." },
+  ], 36);
 
   addFooter(doc, page, total);
 }
@@ -423,7 +268,7 @@ export function createPlanPDF(userData, planText, orderId) {
     const doc = new PDFDocument({ size: "A4", margin: 40 });
     const buffers = [];
 
-    doc.on("data", buffers.push.bind(buffers));
+    doc.on("data", (chunk) => buffers.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(buffers)));
     doc.on("error", reject);
 
@@ -453,53 +298,4 @@ export function createPlanPDF(userData, planText, orderId) {
 
 export function createPlanPDFV2(userData, orderId) {
   return createPlanPDF(userData, "", orderId);
-
-
-export async function createPlanPDFV2(userData, orderId) {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({
-      size: "A4",
-      margin: 40,
-    });
-
-    const buffers = [];
-
-    doc.on("data", (chunk) => buffers.push(chunk));
-
-    doc.on("end", () => {
-      resolve(Buffer.concat(buffers));
-    });
-
-    doc.on("error", reject);
-
-    const selectedPlan = (
-      userData.selectedPlan || ""
-    ).toLowerCase();
-
-    if (
-      selectedPlan.includes("diet") &&
-      !selectedPlan.includes("workout")
-    ) {
-      drawDietPage(doc, userData, orderId, 1, 2);
-      doc.addPage();
-      drawFoodGuidePage(doc, orderId, 2, 2);
-    } else if (
-      selectedPlan.includes("workout") &&
-      !selectedPlan.includes("diet")
-    ) {
-      drawWorkoutPage(doc, userData, orderId, 1, 2);
-      doc.addPage();
-      drawRecoveryPage(doc, orderId, 2, 2);
-    } else {
-      drawDietPage(doc, userData, orderId, 1, 4);
-      doc.addPage();
-      drawFoodGuidePage(doc, orderId, 2, 4);
-      doc.addPage();
-      drawWorkoutPage(doc, userData, orderId, 3, 4);
-      doc.addPage();
-      drawRecoveryPage(doc, orderId, 4, 4);
-    }
-
-    doc.end();
-  });
 }
