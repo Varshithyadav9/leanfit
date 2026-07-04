@@ -20,9 +20,9 @@ function addHeader(doc, title, orderId) {
 }
 
 function addFooter(doc, page, total) {
-  doc.moveTo(40, 790).lineTo(555, 790).strokeColor(COLORS.border).stroke();
-  doc.font("Helvetica").fontSize(8).fillColor(COLORS.text).text("@lean_varshith", 40, 805);
-  doc.text(`Page ${page} of ${total}`, 430, 805, { width: 120, align: "right" });
+  doc.moveTo(40, 760).lineTo(555, 760).strokeColor(COLORS.border).stroke();
+  doc.font("Helvetica").fontSize(8).fillColor(COLORS.text).text("@lean_varshith", 40, 770);
+  doc.text(`Page ${page} of ${total}`, 430, 770, { width: 120, align: "right" });
 }
 
 function sectionTitle(doc, text, y) {
