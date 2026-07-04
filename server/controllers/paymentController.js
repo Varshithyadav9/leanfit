@@ -2,7 +2,7 @@ import fs from "fs";
 
 import Order from "../models/Order.js";
 
-import { createPlanPDF } from "../services/pdfServiceV2.js";
+import { createPlanPDF } from "../services/pdfService.js";
 import { generateDietPlan } from "../services/geminiService.js";
 import { sendOrderEmail } from "../services/emailService.js";
 
@@ -28,15 +28,11 @@ export const generatePlan = async (req, res) => {
       ? `/uploads/${req.file.filename}`
       : "";
 
-    // Generate AI plan
     const plan = await generateDietPlan(userData);
 
-    // Generate PDF
-   const pdfBuffer = await createPlanPDF(userData, plan, orderId);
+    const pdfBuffer = await createPlanPDF(userData, plan, orderId);
 
-    // Save PDF
     const pdfFileName = `${orderId}.pdf`;
-
     const pdfPath = `pdfs/${pdfFileName}`;
 
     fs.writeFileSync(pdfPath, pdfBuffer);
@@ -50,7 +46,6 @@ export const generatePlan = async (req, res) => {
       ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       : null;
 
-    // Save Order
     await Order.create({
       orderId,
 
@@ -59,35 +54,24 @@ export const generatePlan = async (req, res) => {
       mobile: userData.mobile,
 
       goal: userData.goal,
-
       weight: Number(userData.weight),
-
       targetWeight: Number(userData.targetWeight),
 
       selectedPlan: userData.selectedPlan,
-
       selectedPrice: Number(userData.selectedPrice),
 
       status: "Pending",
-
       pdfSent: true,
 
       dashboardAccess: isLeanPro,
-
       accessStartDate,
-
       accessEndDate,
-
-      membershipStatus: isLeanPro
-        ? "Active"
-        : "Not Applicable",
+      membershipStatus: isLeanPro ? "Active" : "Not Applicable",
 
       paymentScreenshot,
-
       pdfPath,
     });
 
-    // Email Admin
     await sendOrderEmail(
       userData,
       orderId,
@@ -98,13 +82,9 @@ export const generatePlan = async (req, res) => {
 
     res.json({
       success: true,
-
       orderId,
-
       plan,
-
       pdfPath,
-
       paymentScreenshot,
     });
   } catch (error) {
@@ -115,124 +95,4 @@ export const generatePlan = async (req, res) => {
       message: error.message,
     });
   }
-};* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background: #f5f7fb;
-  font-family: Arial, Helvetica, sans-serif;
-  overflow-x: hidden;
-}
-
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
-
-.container {
-  width: min(1200px, 95%);
-  margin: auto;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  transition: .25s;
-}
-
-button:hover {
-  opacity: .9;
-}
-
-img {
-  max-width: 100%;
-  display: block;
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-}
-
-.card {
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 5px 15px rgba(0,0,0,.08);
-  padding: 20px;
-}
-
-@media (max-width:768px){
-
-.container{
-width:95%;
-}
-
-.card{
-padding:15px;
-border-radius:10px;
-}
-
-h1{
-font-size:28px;
-}
-
-h2{
-font-size:22px;
-}
-
-h3{
-font-size:18px;
-}
-
-button{
-width:100%;
-padding:14px;
-font-size:16px;
-}
-
-input,
-select,
-textarea{
-font-size:16px;
-padding:14px;
-}
-
-table{
-display:block;
-overflow-x:auto;
-white-space:nowrap;
-}
-
-}
-
-@media(max-width:480px){
-
-.container{
-width:96%;
-}
-
-.card{
-padding:12px;
-}
-
-h1{
-font-size:24px;
-}
-
-h2{
-font-size:20px;
-}
-
-button{
-padding:15px;
-}
-
-}
+};
