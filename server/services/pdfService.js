@@ -211,7 +211,7 @@ if (goalStrategy) {
 }
 
 y += 8;
-y = sectionTitle(doc, "Calories & Macros", y);
+y = sectionTitle(doc, "Daily Meal Plan", y);
   table(doc, 40, y, [
     { label: "Time", key: "time", width: 65 },
     { label: "Meal", key: "meal", width: 65 },
@@ -225,7 +225,77 @@ y = sectionTitle(doc, "Calories & Macros", y);
   addFooter(doc, page, total);
 }
 
-function drawFoodGuidePage(doc, orderId, page, total) {
+function drawFoodGuidePage(doc, planText, orderId, page, total) {
+  addHeader(doc, "Food Alternatives & Practical Notes", orderId);
+
+  const supplementUse =
+    extractSection(planText, "SUPPLEMENT USE") ||
+    "Supplements are optional. Whole foods are enough for most users.";
+
+  const lifestyleTips =
+    extractSection(planText, "LIFESTYLE TIPS") ||
+    "Sleep 7–8 hours daily.\nDrink 3–4 litres water.\nPrepare simple meals in advance.\nTrack weight once weekly.\nStay consistent for 30 days.";
+
+  const mindsetReminder =
+    extractSection(planText, "MINDSET REMINDER") ||
+    "One missed meal or workout does not ruin progress.\nReturn to the plan from the next meal or next session.";
+
+  let y = 115;
+
+  y = sectionTitle(doc, "Protein Replacement Options", y);
+  y = table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Protein Food", key: "food", width: 260 },
+      { label: "Quantity", key: "qty", width: 250 },
+    ],
+    proteinRows(),
+    28
+  );
+
+  y += 18;
+
+  y = sectionTitle(doc, "Carbohydrate Replacement Options", y);
+  y = table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Carb Food", key: "food", width: 260 },
+      { label: "Quantity", key: "qty", width: 250 },
+    ],
+    carbRows(),
+    28
+  );
+
+  y += 18;
+
+  y = sectionTitle(doc, "Supplement Use", y);
+  doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.text).text(supplementUse, 40, y, {
+    width: 515,
+    lineGap: 3,
+  });
+
+  y += 55;
+
+  y = sectionTitle(doc, "Lifestyle Tips", y);
+  doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.text).text(lifestyleTips, 40, y, {
+    width: 515,
+    lineGap: 3,
+  });
+
+  y += 90;
+
+  y = sectionTitle(doc, "Mindset Reminder", y);
+  doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.text).text(mindsetReminder, 40, y, {
+    width: 515,
+    lineGap: 3,
+  });
+
+  addFooter(doc, page, total);
+}
   addHeader(doc, "Food Options & Grocery Guide", orderId);
 
   let y = 115;
@@ -324,7 +394,7 @@ export function createPlanPDF(userData, planText, orderId) {
     if (selectedPlan.includes("diet") && !selectedPlan.includes("workout")) {
       drawDietPage(doc, userData, planText, orderId, 1, 2);
       doc.addPage();
-      drawFoodGuidePage(doc, orderId, 2, 2);
+      drawFoodGuidePage(doc, planText, orderId, 2, 2);
     } else if (selectedPlan.includes("workout") && !selectedPlan.includes("diet")) {
       drawWorkoutPage(doc, userData, orderId, 1, 2);
       doc.addPage();
@@ -332,7 +402,7 @@ export function createPlanPDF(userData, planText, orderId) {
     } else {
       drawDietPage(doc, userData, planText, orderId, 1, 4);
       doc.addPage();
-      drawFoodGuidePage(doc, orderId, 2, 4);
+      drawFoodGuidePage(doc, planText, orderId, 2, 4);
       doc.addPage();
       drawWorkoutPage(doc, userData, orderId, 3, 4);
       doc.addPage();
