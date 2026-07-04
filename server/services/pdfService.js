@@ -45,6 +45,7 @@ function table(doc, x, y, columns, rows, rowHeight = 34) {
 
   rows.forEach((row, index) => {
     cx = x;
+
     columns.forEach((col) => {
       doc.rect(cx, y, col.width, rowHeight).fillAndStroke(
         index % 2 === 0 ? COLORS.white : COLORS.light,
@@ -80,14 +81,16 @@ function caloriesByGoal(goal = "") {
 }
 
 function customerRows(userData, orderId) {
-  return [{
-    id: orderId,
-    name: userData.name || "Customer",
-    age: userData.age || "-",
-    height: `${userData.height || "-"} cm`,
-    weight: `${userData.weight || "-"} kg`,
-    goal: userData.goal || "-",
-  }];
+  return [
+    {
+      id: orderId,
+      name: userData.name || "Customer",
+      age: userData.age || "-",
+      height: `${userData.height || "-"} cm`,
+      weight: `${userData.weight || "-"} kg`,
+      goal: userData.goal || "-",
+    },
+  ];
 }
 
 function dietRows() {
@@ -151,18 +154,26 @@ function workoutRows(userData) {
 function drawDietPage(doc, userData, planText, orderId, page, total) {
   addHeader(doc, "Personalized Diet Plan", orderId);
 
-  let y = 115;
   const personSnapshot = extractSection(planText, "PERSON SNAPSHOT");
   const goalStrategy = extractSection(planText, "GOAL STRATEGY");
 
+  let y = 115;
+
   y = sectionTitle(doc, "Customer Details", y);
-  y = table(doc, 40, y, [
-    { label: "Name", key: "name", width: 110 },
-    { label: "Age", key: "age", width: 50 },
-    { label: "Height", key: "height", width: 80 },
-    { label: "Weight", key: "weight", width: 80 },
-    { label: "Goal", key: "goal", width: 195 },
-  ], customerRows(userData, orderId), 32);
+  y = table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Name", key: "name", width: 110 },
+      { label: "Age", key: "age", width: 50 },
+      { label: "Height", key: "height", width: 80 },
+      { label: "Weight", key: "weight", width: 80 },
+      { label: "Goal", key: "goal", width: 195 },
+    ],
+    customerRows(userData, orderId),
+    32
+  );
 
   y += 18;
 
@@ -185,25 +196,41 @@ function drawDietPage(doc, userData, planText, orderId, page, total) {
   }
 
   y = sectionTitle(doc, "Calories & Macros", y);
-  y = table(doc, 40, y, [
-    { label: "Calories", key: "cal", width: 130 },
-    { label: "Protein", key: "protein", width: 120 },
-    { label: "Carbs", key: "carbs", width: 120 },
-    { label: "Fats", key: "fat", width: 120 },
-  ], [{ cal: caloriesByGoal(userData.goal), protein: "120–160g", carbs: "220–300g", fat: "55–75g" }], 32);
+  y = table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Calories", key: "cal", width: 130 },
+      { label: "Protein", key: "protein", width: 120 },
+      { label: "Carbs", key: "carbs", width: 120 },
+      { label: "Fats", key: "fat", width: 120 },
+    ],
+    [{ cal: caloriesByGoal(userData.goal), protein: "120–160g", carbs: "220–300g", fat: "55–75g" }],
+    32
+  );
 
-  y += 16;
+  y += 18;
   y = sectionTitle(doc, "Daily Meal Plan", y);
 
-  table(doc, 40, y, [
-    { label: "Time", key: "time", width: 65 },
-    { label: "Meal", key: "meal", width: 65 },
-    { label: "Main Option", key: "main", width: 195 },
-    { label: "Alternatives with Quantity", key: "alt", width: 230 },
-  ], dietRows(), 54);
+  table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Time", key: "time", width: 65 },
+      { label: "Meal", key: "meal", width: 65 },
+      { label: "Main Option", key: "main", width: 195 },
+      { label: "Alternatives with Quantity", key: "alt", width: 230 },
+    ],
+    dietRows(),
+    54
+  );
 
   doc.font("Helvetica-Bold").fontSize(8.5).fillColor(COLORS.dark)
-    .text("Note: Choose ONE main option or ONE alternative. Do not eat all alternatives together.", 40, 735, { width: 515 });
+    .text("Note: Choose ONE main option or ONE alternative. Do not eat all alternatives together.", 40, 735, {
+      width: 515,
+    });
 
   addFooter(doc, page, total);
 }
@@ -226,33 +253,51 @@ function drawFoodGuidePage(doc, planText, orderId, page, total) {
   let y = 115;
 
   y = sectionTitle(doc, "Protein Replacement Options", y);
-  y = table(doc, 40, y, [
-    { label: "Protein Food", key: "food", width: 260 },
-    { label: "Quantity", key: "qty", width: 250 },
-  ], proteinRows(), 28);
+  y = table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Protein Food", key: "food", width: 260 },
+      { label: "Quantity", key: "qty", width: 250 },
+    ],
+    proteinRows(),
+    26
+  );
 
-  y += 18;
+  y += 14;
+
   y = sectionTitle(doc, "Carbohydrate Replacement Options", y);
-  y = table(doc, 40, y, [
-    { label: "Carb Food", key: "food", width: 260 },
-    { label: "Quantity", key: "qty", width: 250 },
-  ], carbRows(), 28);
+  y = table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Carb Food", key: "food", width: 260 },
+      { label: "Quantity", key: "qty", width: 250 },
+    ],
+    carbRows(),
+    26
+  );
 
-  y += 18;
+  y += 14;
+
   y = sectionTitle(doc, "Supplement Use", y);
   doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.text).text(supplementUse, 40, y, {
     width: 515,
     lineGap: 3,
   });
 
-  y += 55;
+  y += 45;
+
   y = sectionTitle(doc, "Lifestyle Tips", y);
   doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.text).text(lifestyleTips, 40, y, {
     width: 515,
     lineGap: 3,
   });
 
-  y += 90;
+  y += 75;
+
   y = sectionTitle(doc, "Mindset Reminder", y);
   doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.text).text(mindsetReminder, 40, y, {
     width: 515,
@@ -272,15 +317,23 @@ function drawWorkoutPage(doc, userData, planText, orderId, page, total) {
   let y = 115;
 
   y = sectionTitle(doc, "Weekly Workout Schedule", y);
-  y = table(doc, 40, y, [
-    { label: "Day", key: "day", width: 60 },
-    { label: "Focus", key: "focus", width: 110 },
-    { label: "Exercises", key: "exercises", width: 250 },
-    { label: "Sets", key: "sets", width: 55 },
-    { label: "Reps", key: "reps", width: 80 },
-  ], workoutRows(userData), 50);
+  y = table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Day", key: "day", width: 60 },
+      { label: "Focus", key: "focus", width: 110 },
+      { label: "Exercises", key: "exercises", width: 250 },
+      { label: "Sets", key: "sets", width: 55 },
+      { label: "Reps", key: "reps", width: 80 },
+    ],
+    workoutRows(userData),
+    50
+  );
 
   y += 18;
+
   y = sectionTitle(doc, "Workout Notes", y);
   doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.text).text(workoutNotes, 40, y, {
     width: 515,
@@ -288,46 +341,68 @@ function drawWorkoutPage(doc, userData, planText, orderId, page, total) {
   });
 
   y += 55;
+
   y = sectionTitle(doc, "Workout Rules", y);
-  table(doc, 40, y, [
-    { label: "Rule", key: "rule", width: 150 },
-    { label: "Instruction", key: "instruction", width: 360 },
-  ], [
-    { rule: "Warm-up", instruction: "5–10 minutes before lifting." },
-    { rule: "Rest", instruction: "60–90 seconds between sets." },
-    { rule: "Progression", instruction: "Increase weight or reps slowly when form is good." },
-    { rule: "Cardio", instruction: "20–30 minutes walking 3–4 times weekly." },
-    { rule: "Recovery", instruction: "Sleep 7–8 hours daily." },
-  ], 34);
+  table(
+    doc,
+    40,
+    y,
+    [
+      { label: "Rule", key: "rule", width: 150 },
+      { label: "Instruction", key: "instruction", width: 360 },
+    ],
+    [
+      { rule: "Warm-up", instruction: "5–10 minutes before lifting." },
+      { rule: "Rest", instruction: "60–90 seconds between sets." },
+      { rule: "Progression", instruction: "Increase weight or reps slowly when form is good." },
+      { rule: "Cardio", instruction: "20–30 minutes walking 3–4 times weekly." },
+      { rule: "Recovery", instruction: "Sleep 7–8 hours daily." },
+    ],
+    34
+  );
 
   addFooter(doc, page, total);
 }
 
-function drawRecoveryPage(doc, planText, orderId, page, total) {
+function drawRecoveryPage(doc, orderId, page, total) {
   addHeader(doc, "Recovery & Progress Checklist", orderId);
-
-  const lifestyleTips =
-    extractSection(planText, "LIFESTYLE TIPS") ||
-    "Sleep 7–8 hours daily.\nDrink 3–4 litres water.\nTrack body weight once weekly.";
 
   let y = 115;
 
   y = sectionTitle(doc, "Daily Checklist", y);
-  y = table(doc, 40, y, [{ label: "Checklist", key: "item", width: 510 }], [
-    { item: "[ ] Complete meals" },
-    { item: "[ ] Hit protein target" },
-    { item: "[ ] Drink 3–4 litres water" },
-    { item: "[ ] Workout / walk completed" },
-    { item: "[ ] Sleep 7–8 hours" },
-    { item: "[ ] Check weight once weekly" },
-  ], 34);
+  y = table(
+    doc,
+    40,
+    y,
+    [{ label: "Checklist", key: "item", width: 510 }],
+    [
+      { item: "[ ] Complete meals" },
+      { item: "[ ] Hit protein target" },
+      { item: "[ ] Drink 3–4 litres water" },
+      { item: "[ ] Workout / walk completed" },
+      { item: "[ ] Sleep 7–8 hours" },
+      { item: "[ ] Check weight once weekly" },
+    ],
+    34
+  );
 
   y += 28;
+
   y = sectionTitle(doc, "Important Tips", y);
-  doc.font("Helvetica").fontSize(8.5).fillColor(COLORS.text).text(lifestyleTips, 40, y, {
-    width: 515,
-    lineGap: 3,
-  });
+  table(
+    doc,
+    40,
+    y,
+    [{ label: "Tips", key: "tip", width: 510 }],
+    [
+      { tip: "Do not skip meals. Consistency matters more than perfection." },
+      { tip: "Use affordable alternatives when chicken or fish is not possible." },
+      { tip: "Track your weight weekly, not daily." },
+      { tip: "If energy is low, increase carbs slightly around workout." },
+      { tip: "Stay consistent for at least 30 days before judging results." },
+    ],
+    36
+  );
 
   addFooter(doc, page, total);
 }
@@ -350,7 +425,7 @@ export function createPlanPDF(userData, planText, orderId) {
     } else if (selectedPlan.includes("workout") && !selectedPlan.includes("diet")) {
       drawWorkoutPage(doc, userData, planText, orderId, 1, 2);
       doc.addPage();
-      drawRecoveryPage(doc, planText, orderId, 2, 2);
+      drawRecoveryPage(doc, orderId, 2, 2);
     } else {
       drawDietPage(doc, userData, planText, orderId, 1, 4);
       doc.addPage();
@@ -358,7 +433,7 @@ export function createPlanPDF(userData, planText, orderId) {
       doc.addPage();
       drawWorkoutPage(doc, userData, planText, orderId, 3, 4);
       doc.addPage();
-      drawRecoveryPage(doc, planText, orderId, 4, 4);
+      drawRecoveryPage(doc, orderId, 4, 4);
     }
 
     doc.end();
