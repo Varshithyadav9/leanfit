@@ -63,7 +63,20 @@ function table(doc, x, y, columns, rows, rowHeight = 34) {
 
   return y;
 }
+function extractSection(planText = "", heading = "") {
+  const text = String(planText || "");
 
+  const pattern = new RegExp(
+    `${heading}:\\s*([\\s\\S]*?)(?=\\n[A-Z ]+:|$)`,
+    "i"
+  );
+
+  const match = text.match(pattern);
+
+  if (!match) return "";
+
+  return match[1].trim();
+}
 function caloriesByGoal(goal = "") {
   const g = goal.toLowerCase();
   if (g.includes("fat")) return "1800–2200 kcal";
@@ -141,10 +154,12 @@ function workoutRows(userData) {
   ];
 }
 
-function drawDietPage(doc, userData, orderId, page, total) {
+function drawDietPage(doc, userData, planText, orderId, page, total) {
   addHeader(doc, "Personalized Diet Plan", orderId);
 
   let y = 115;
+  const personSnapshot = extractSection(planText, "PERSON SNAPSHOT");
+const goalStrategy = extractSection(planText, "GOAL STRATEGY");
   y = sectionTitle(doc, "Customer Details", y);
   y = table(doc, 40, y, [
     { label: "Name", key: "name", width: 110 },
@@ -163,8 +178,40 @@ function drawDietPage(doc, userData, orderId, page, total) {
     { label: "Fats", key: "fat", width: 120 },
   ], [{ cal: caloriesByGoal(userData.goal), protein: "120–160g", carbs: "220–300g", fat: "55–75g" }], 32);
 
-  y += 22;
-  y = sectionTitle(doc, "Daily Meal Plan", y);
+  y += 18;
+
+if (personSnapshot) {
+  y = sectionTitle(doc, "Person Snapshot", y);
+
+  doc
+    .font("Helvetica")
+    .fontSize(8.5)
+    .fillColor(COLORS.text)
+    .text(personSnapshot, 40, y, {
+      width: 515,
+      lineGap: 3,
+    });
+
+  y += 42;
+}
+
+if (goalStrategy) {
+  y = sectionTitle(doc, "Goal Strategy", y);
+
+  doc
+    .font("Helvetica")
+    .fontSize(8.5)
+    .fillColor(COLORS.text)
+    .text(goalStrategy, 40, y, {
+      width: 515,
+      lineGap: 3,
+    });
+
+  y += 48;
+}
+
+y += 8;
+y = sectionTitle(doc, "Calories & Macros", y);
   table(doc, 40, y, [
     { label: "Time", key: "time", width: 65 },
     { label: "Meal", key: "meal", width: 65 },
@@ -275,7 +322,7 @@ export function createPlanPDF(userData, planText, orderId) {
     const selectedPlan = (userData.selectedPlan || "").toLowerCase();
 
     if (selectedPlan.includes("diet") && !selectedPlan.includes("workout")) {
-      drawDietPage(doc, userData, orderId, 1, 2);
+      drawDietPage(doc, userData, planText, orderId, 1, 2);
       doc.addPage();
       drawFoodGuidePage(doc, orderId, 2, 2);
     } else if (selectedPlan.includes("workout") && !selectedPlan.includes("diet")) {
@@ -283,7 +330,7 @@ export function createPlanPDF(userData, planText, orderId) {
       doc.addPage();
       drawRecoveryPage(doc, orderId, 2, 2);
     } else {
-      drawDietPage(doc, userData, orderId, 1, 4);
+      drawDietPage(doc, userData, planText, orderId, 1, 4);
       doc.addPage();
       drawFoodGuidePage(doc, orderId, 2, 4);
       doc.addPage();
