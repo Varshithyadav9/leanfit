@@ -1176,4 +1176,146 @@ select {
   .summary-grid {
     grid-template-columns: 1fr;
   }
+}/* =========================
+   LEANFIT MOBILE FIXES
+========================= */
+
+@media (max-width: 768px) {
+  body {
+    background: #f5f7fb;
+  }
+
+  .welcome-page,
+  .page,
+  .dashboard-page,
+  .admin-page {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px 12px 32px;
+  }
+
+  .hero,
+  .card,
+  .dashboard-header-card,
+  .admin-header,
+  .dashboard-section,
+  .nutrition-progress-section,
+  .calorie-card,
+  .summary-card,
+  .admin-card {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+    line-height: 1.15;
+  }
+
+  .hero-text,
+  .muted,
+  .feature-card p,
+  .section-head p {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .hero-actions,
+  .page-actions,
+  .admin-actions,
+  .water-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .primary-btn,
+  .secondary-btn,
+  .text-btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: 15px;
+    border-radius: 14px;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .features,
+  .goal-grid,
+  .plan-grid,
+  .dashboard-grid,
+  .summary-grid,
+  .admin-stats-grid,
+  .admin-layout,
+  .admin-detail-grid,
+  .two-col {
+    grid-template-columns: 1fr !important;
+  }
+
+  .selected-plan-box h3,
+  .selected-summary h3 {
+    font-size: 22px;
+  }
+
+  .selected-plan-box strong,
+  .selected-summary strong {
+    font-size: 26px;
+  }
+
+  .meal-card,
+  .admin-order-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .calorie-card {
+    align-items: center;
+    text-align: center;
+  }
+
+  .calorie-info h2 {
+    font-size: 24px;
+  }
+
+  .calorie-ring {
+    width: 115px;
+    height: 115px;
+  }
+
+  .calorie-ring div {
+    width: 82px;
+    height: 82px;
+  }
+
+  .screenshot-box img,
+  .food-preview {
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero h1 {
+    font-size: 26px;
+  }
+
+  .card,
+  .hero,
+  .dashboard-section,
+  .nutrition-progress-section {
+    padding: 15px;
+  }
+
+  .brand-label {
+    font-size: 12px;
+  }
+
+  .summary-card strong,
+  .macro-card strong,
+  .dash-card strong {
+    font-size: 20px;
+  }
 }
