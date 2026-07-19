@@ -1,4 +1,12 @@
+import {
+  getMealTemplate,
+  proteinAlternatives,
+  carbAlternatives,
+  vegetables,
+  fruits,
+} from "../data/mealTemplates.js";
 import PDFDocument from "pdfkit";
+
 
 const COLORS = {
   green: "#16a34a",
