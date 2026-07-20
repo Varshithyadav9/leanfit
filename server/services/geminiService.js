@@ -181,3 +181,89 @@ export async function generateDietPlan(userData) {
     return backupPlan(userData);
   }
 }
+function extractJsonObject(value = "") {
+  const cleaned = String(value)
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error("Gemini did not return valid meal data.");
+  }
+
+  return JSON.parse(cleaned.slice(start, end + 1));
+}
+
+function numberOrZero(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
+}
+
+export async function analyzeFoodImage(imagePath, mimeType = "image/jpeg") {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is missing on the server.");
+  }
+
+  const fs = await import("fs/promises");
+  const imageBuffer = await fs.readFile(imagePath);
+
+  const prompt = `
+Analyze this food photo for LeanFit.
+
+Return ONLY one valid JSON object with exactly these keys:
+{
+  "mealName": "short food name",
+  "quantity": "estimated visible serving, for example 1 plate (300 g)",
+  "calories": 0,
+  "protein": 0,
+  "carbs": 0,
+  "fat": 0,
+  "confidence": 0
+}
+
+Rules:
+- Estimate nutrition for the complete visible serving, not per 100 g.
+- Use whole-number estimates.
+- confidence must be an integer from 0 to 100.
+- For mixed Indian dishes, identify the most likely dish and include major visible components.
+- If the image is unclear, still provide a conservative estimate and lower confidence.
+- Do not include markdown, explanations, notes, ranges, units inside numeric values, or extra keys.
+`;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            inlineData: {
+              mimeType,
+              data: imageBuffer.toString("base64"),
+            },
+          },
+          { text: prompt },
+        ],
+      },
+    ],
+    config: {
+      responseMimeType: "application/json",
+      temperature: 0.2,
+    },
+  });
+
+  const parsed = extractJsonObject(response.text);
+
+  return {
+    mealName: String(parsed.mealName || "Detected meal").trim(),
+    quantity: String(parsed.quantity || "1 serving").trim(),
+    calories: numberOrZero(parsed.calories),
+    protein: numberOrZero(parsed.protein),
+    carbs: numberOrZero(parsed.carbs),
+    fat: numberOrZero(parsed.fat),
+    confidence: Math.min(100, numberOrZero(parsed.confidence)),
+  };
+}

@@ -1,87 +1,45 @@
 import express from "express";
 import multer from "multer";
-import fs from "fs";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
+import { analyzeFoodImage } from "../services/geminiService.js";
 
 const router = express.Router();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadDirectory = path.join(__dirname, "..", "uploads", "meals");
 
-const mealUploadDirectory = path.join(
-  __dirname,
-  "..",
-  "uploads",
-  "meals"
-);
-
-// Automatically create uploads/meals if it does not exist
-fs.mkdirSync(mealUploadDirectory, { recursive: true });
+fs.mkdirSync(uploadDirectory, { recursive: true });
 
 const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, mealUploadDirectory);
-  },
+  destination: (req, file, cb) => cb(null, uploadDirectory),
+  filename: (req, file, cb) => {
+    const safeName = file.originalname
+      .replace(/[^a-zA-Z0-9._-]/g, "-")
+      .replace(/-+/g, "-");
 
-  filename: (req, file, callback) => {
-    const extension = path.extname(file.originalname).toLowerCase();
-    const uniqueName = `meal-${Date.now()}-${Math.round(
-      Math.random() * 1e9
-    )}${extension}`;
-
-    callback(null, uniqueName);
+    cb(null, `${Date.now()}-${safeName}`);
   },
 });
-
-const allowedImageTypes = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-];
-
-const fileFilter = (req, file, callback) => {
-  if (!allowedImageTypes.includes(file.mimetype)) {
-    return callback(
-      new Error("Only JPG, JPEG, PNG and WEBP images are allowed.")
-    );
-  }
-
-  callback(null, true);
-};
 
 const upload = multer({
   storage,
-  fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5 MB
+    fileSize: 8 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files are allowed."));
+    }
+
+    cb(null, true);
   },
 });
 
-router.post("/food/upload", (req, res) => {
-  upload.single("mealPhoto")(req, res, (error) => {
-    if (error instanceof multer.MulterError) {
-      if (error.code === "LIMIT_FILE_SIZE") {
-        return res.status(400).json({
-          success: false,
-          message: "Meal photo must be smaller than 5 MB.",
-        });
-      }
-
-      return res.status(400).json({
-        success: false,
-        message: error.message || "Image upload failed.",
-      });
-    }
-
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: error.message || "Invalid image.",
-      });
-    }
-
+router.post("/food/upload", upload.single("mealPhoto"), async (req, res) => {
+  try {
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -89,19 +47,35 @@ router.post("/food/upload", (req, res) => {
       });
     }
 
-    const imageUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/uploads/meals/${req.file.filename}`;
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const imageUrl = `${baseUrl}/uploads/meals/${req.file.filename}`;
+
+    let analysis = null;
+    let analysisMessage = "Meal photo uploaded successfully.";
+
+    try {
+      analysis = await analyzeFoodImage(req.file.path, req.file.mimetype);
+      analysisMessage = "Meal photo analyzed successfully.";
+    } catch (analysisError) {
+      console.error("Food analysis failed:", analysisError.message);
+      analysisMessage =
+        "Photo uploaded, but automatic nutrition detection was unavailable. You can enter the values manually.";
+    }
 
     return res.status(201).json({
       success: true,
-      message: "Meal photo uploaded successfully.",
+      message: analysisMessage,
       imageUrl,
-      filename: req.file.filename,
-      mimeType: req.file.mimetype,
-      size: req.file.size,
+      analysis,
     });
-  });
+  } catch (error) {
+    console.error("Food upload failed:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Unable to upload meal photo.",
+    });
+  }
 });
 
 export default router;
