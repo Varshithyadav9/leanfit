@@ -5,7 +5,12 @@ function Dashboard({ formData, setPage }) {
   const [customer, setCustomer] = useState(null);
   const [water, setWater] = useState(0);
   const [weight, setWeight] = useState("");
-  const [mealPhoto, setMealPhoto] = useState(null);
+  const [mealPhotoPreview, setMealPhotoPreview] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [analyzingPhoto, setAnalyzingPhoto] = useState(false);
+  const [aiConfidence, setAiConfidence] = useState(0);
+  const [photoUploadError, setPhotoUploadError] = useState("");
   const [loggedMeals, setLoggedMeals] = useState([]);
   const [history, setHistory] = useState([]);
 
@@ -124,9 +129,62 @@ function Dashboard({ formData, setPage }) {
     return `${Math.min((value / goal) * 100, 100)}%`;
   };
 
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) setMealPhoto(URL.createObjectURL(file));
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const localPreview = URL.createObjectURL(file);
+    setMealPhotoPreview(localPreview);
+    setUploadedImageUrl("");
+    setPhotoUploadError("");
+    setAiConfidence(0);
+    setUploadingPhoto(true);
+    setAnalyzingPhoto(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("mealPhoto", file);
+
+      const response = await fetch(
+        "https://leanfit.onrender.com/api/food/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to upload meal photo.");
+      }
+
+      setUploadedImageUrl(data.imageUrl);
+
+      if (data.analysis) {
+        setMealForm({
+          mealName: data.analysis.mealName || "",
+          quantity: data.analysis.quantity || "",
+          calories: String(data.analysis.calories ?? ""),
+          protein: String(data.analysis.protein ?? ""),
+          carbs: String(data.analysis.carbs ?? ""),
+          fat: String(data.analysis.fat ?? ""),
+        });
+        setAiConfidence(Number(data.analysis.confidence || 0));
+      } else {
+        setPhotoUploadError(
+          data.message ||
+            "Photo uploaded, but automatic detection was unavailable. Enter the values manually."
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      setPhotoUploadError(error.message || "Unable to upload meal photo.");
+    } finally {
+      setUploadingPhoto(false);
+      setAnalyzingPhoto(false);
+    }
   };
 
   const updateMealForm = (field, value) => {
@@ -134,9 +192,17 @@ function Dashboard({ formData, setPage }) {
   };
 
   const addMeal = () => {
-    if (!mealForm.mealName || !mealForm.calories) return;
+    if (!mealForm.mealName || !mealForm.calories || uploadingPhoto) return;
 
-    const newMeals = [...loggedMeals, mealForm];
+    const newMeal = {
+      ...mealForm,
+      imageUrl: uploadedImageUrl,
+      aiConfidence,
+      aiGenerated: aiConfidence > 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    const newMeals = [...loggedMeals, newMeal];
 
     setLoggedMeals(newMeals);
     saveProgress(newMeals, water, weight);
@@ -150,7 +216,14 @@ function Dashboard({ formData, setPage }) {
       fat: "",
     });
 
-    setMealPhoto(null);
+    if (mealPhotoPreview) {
+      URL.revokeObjectURL(mealPhotoPreview);
+    }
+
+    setMealPhotoPreview(null);
+    setUploadedImageUrl("");
+    setPhotoUploadError("");
+    setAiConfidence(0);
   };
 
   const updateWater = (amount) => {
@@ -312,8 +385,28 @@ function Dashboard({ formData, setPage }) {
           onChange={handlePhotoUpload}
         />
 
-        {mealPhoto && (
-          <img src={mealPhoto} alt="Food preview" className="food-preview" />
+        {mealPhotoPreview && (
+          <img
+            src={mealPhotoPreview}
+            alt="Food preview"
+            className="food-preview"
+          />
+        )}
+
+        {uploadingPhoto && (
+          <p>{analyzingPhoto ? "Analyzing food and estimating nutrition..." : "Uploading meal photo..."}</p>
+        )}
+
+        {!uploadingPhoto && uploadedImageUrl && aiConfidence > 0 && (
+          <p>Food detected and fields filled automatically ({aiConfidence}% confidence).</p>
+        )}
+
+        {!uploadingPhoto && uploadedImageUrl && aiConfidence === 0 && !photoUploadError && (
+          <p>Meal photo uploaded successfully.</p>
+        )}
+
+        {photoUploadError && (
+          <p className="form-error">{photoUploadError}</p>
         )}
 
         <div className="form-grid two-col">
@@ -378,8 +471,12 @@ function Dashboard({ formData, setPage }) {
           </div>
         </div>
 
-        <button className="primary-btn full-btn" onClick={addMeal}>
-          Add Meal
+        <button
+          className="primary-btn full-btn"
+          onClick={addMeal}
+          disabled={uploadingPhoto}
+        >
+          {uploadingPhoto ? "Analyzing Food..." : "Add Meal"}
         </button>
       </section>
 
@@ -395,7 +492,15 @@ function Dashboard({ formData, setPage }) {
           <div className="empty-state">No meals added yet.</div>
         ) : (
           loggedMeals.map((meal, index) => (
-            <div className="meal-card" key={index}>
+            <div className="meal-card" key={meal._id || index}>
+              {meal.imageUrl && (
+                <img
+                  src={meal.imageUrl}
+                  alt={meal.mealName || "Logged meal"}
+                  className="meal-history-image"
+                />
+              )}
+
               <div>
                 <h4>{meal.mealName}</h4>
                 <p>{meal.quantity || "Quantity not added"}</p>
@@ -479,6 +584,20 @@ function Dashboard({ formData, setPage }) {
                   <h4>{day.date}</h4>
                   <p>Calories: {calories} kcal</p>
                   <p>Water: {day.water || 0} L</p>
+                </div>
+
+                <div className="history-meal-images">
+                  {(day.meals || [])
+                    .filter((meal) => meal.imageUrl)
+                    .slice(0, 4)
+                    .map((meal, index) => (
+                      <img
+                        key={meal._id || `${day._id}-${index}`}
+                        src={meal.imageUrl}
+                        alt={meal.mealName || "Meal history"}
+                        className="meal-history-thumbnail"
+                      />
+                    ))}
                 </div>
 
                 <strong>{day.weight || "-"} kg</strong>
