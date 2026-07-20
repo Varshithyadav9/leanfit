@@ -26,7 +26,7 @@ const PAGE = {
   left: 40,
   right: 555,
   top: 105,
-  bottom: 748,
+  bottom: 790,
 };
 
 function safeText(value, fallback = "-") {
@@ -841,10 +841,10 @@ function drawFoodGuidePage(doc, planText, orderId, page, total) {
       { label: "Equivalent Quantity", key: "qty", width: 250 },
     ],
     proteinRows,
-    27
+    24
   );
 
-  y += 14;
+  y += 9;
   y = sectionTitle(doc, "Carbohydrate Replacement Options", y);
   y = basicTable(
     doc,
@@ -855,13 +855,13 @@ function drawFoodGuidePage(doc, planText, orderId, page, total) {
       { label: "Equivalent Quantity", key: "qty", width: 250 },
     ],
     carbRows,
-    27
+    24
   );
 
   y += 16;
 
   doc
-    .roundedRect(PAGE.left, y, 250, 78, 7)
+    .roundedRect(PAGE.left, y, 250, 68, 7)
     .fillAndStroke(COLORS.light, COLORS.border);
 
   doc
@@ -884,7 +884,7 @@ function drawFoodGuidePage(doc, planText, orderId, page, total) {
     );
 
   doc
-    .roundedRect(PAGE.left + 265, y, 250, 78, 7)
+    .roundedRect(PAGE.left + 265, y, 250, 68, 7)
     .fillAndStroke(COLORS.light, COLORS.border);
 
   doc
@@ -906,19 +906,21 @@ function drawFoodGuidePage(doc, planText, orderId, page, total) {
       { width: 226, lineGap: 2 }
     );
 
-  y += 94;
+  y += 76;
 
   y = sectionTitle(doc, "Supplement Use", y);
   y = drawParagraph(doc, supplementUse, y, {
     width: 515,
-    fontSize: 8.3,
+    fontSize: 7.8,
+    lineGap: 1.5,
   });
 
-  y += 14;
+  y += 6;
   y = sectionTitle(doc, "Lifestyle Tips", y);
   drawParagraph(doc, lifestyleTips, y, {
     width: 515,
-    fontSize: 8.3,
+    fontSize: 7.6,
+    lineGap: 1.5,
   });
 
   addFooter(doc, page, total);
