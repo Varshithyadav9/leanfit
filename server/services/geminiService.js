@@ -181,6 +181,44 @@ export async function generateDietPlan(userData) {
     return backupPlan(userData);
   }
 }
+function extractResponseText(response) {
+  if (!response) {
+    throw new Error("Gemini returned an empty response.");
+  }
+
+  if (typeof response.text === "string" && response.text.trim()) {
+    return response.text.trim();
+  }
+
+  if (typeof response.text === "function") {
+    const value = response.text();
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  const parts =
+    response.candidates?.[0]?.content?.parts ||
+    response.response?.candidates?.[0]?.content?.parts ||
+    [];
+
+  const combined = parts
+    .map((part) => part?.text || "")
+    .join("")
+    .trim();
+
+  if (!combined) {
+    const reason =
+      response.candidates?.[0]?.finishReason ||
+      response.promptFeedback?.blockReason ||
+      "No text returned";
+
+    throw new Error(`Gemini food analysis returned no usable text: ${reason}`);
+  }
+
+  return combined;
+}
+
 function extractJsonObject(value = "") {
   const cleaned = String(value)
     .replace(/```json/gi, "")
@@ -191,7 +229,7 @@ function extractJsonObject(value = "") {
   const end = cleaned.lastIndexOf("}");
 
   if (start === -1 || end === -1 || end <= start) {
-    throw new Error("Gemini did not return valid meal data.");
+    throw new Error(`Gemini did not return valid meal JSON: ${cleaned.slice(0, 250)}`);
   }
 
   return JSON.parse(cleaned.slice(start, end + 1));
@@ -202,39 +240,32 @@ function numberOrZero(value) {
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
 }
 
-export async function analyzeFoodImage(imagePath, mimeType = "image/jpeg") {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is missing on the server.");
-  }
+const mealResponseSchema = {
+  type: "object",
+  properties: {
+    mealName: { type: "string" },
+    quantity: { type: "string" },
+    calories: { type: "number" },
+    protein: { type: "number" },
+    carbs: { type: "number" },
+    fat: { type: "number" },
+    confidence: { type: "number" },
+  },
+  required: [
+    "mealName",
+    "quantity",
+    "calories",
+    "protein",
+    "carbs",
+    "fat",
+    "confidence",
+  ],
+  additionalProperties: false,
+};
 
-  const fs = await import("fs/promises");
-  const imageBuffer = await fs.readFile(imagePath);
-
-  const prompt = `
-Analyze this food photo for LeanFit.
-
-Return ONLY one valid JSON object with exactly these keys:
-{
-  "mealName": "short food name",
-  "quantity": "estimated visible serving, for example 1 plate (300 g)",
-  "calories": 0,
-  "protein": 0,
-  "carbs": 0,
-  "fat": 0,
-  "confidence": 0
-}
-
-Rules:
-- Estimate nutrition for the complete visible serving, not per 100 g.
-- Use whole-number estimates.
-- confidence must be an integer from 0 to 100.
-- For mixed Indian dishes, identify the most likely dish and include major visible components.
-- If the image is unclear, still provide a conservative estimate and lower confidence.
-- Do not include markdown, explanations, notes, ranges, units inside numeric values, or extra keys.
-`;
-
+async function analyzeWithModel(model, imageBuffer, mimeType, prompt) {
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model,
     contents: [
       {
         role: "user",
@@ -251,19 +282,79 @@ Rules:
     ],
     config: {
       responseMimeType: "application/json",
-      temperature: 0.2,
+      responseSchema: mealResponseSchema,
+      temperature: 0.1,
+      maxOutputTokens: 800,
     },
   });
 
-  const parsed = extractJsonObject(response.text);
+  return extractJsonObject(extractResponseText(response));
+}
 
-  return {
-    mealName: String(parsed.mealName || "Detected meal").trim(),
-    quantity: String(parsed.quantity || "1 serving").trim(),
-    calories: numberOrZero(parsed.calories),
-    protein: numberOrZero(parsed.protein),
-    carbs: numberOrZero(parsed.carbs),
-    fat: numberOrZero(parsed.fat),
-    confidence: Math.min(100, numberOrZero(parsed.confidence)),
-  };
+export async function analyzeFoodImage(imagePath, mimeType = "image/jpeg") {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is missing on the server.");
+  }
+
+  const fs = await import("fs/promises");
+  const imageBuffer = await fs.readFile(imagePath);
+
+  if (!imageBuffer.length) {
+    throw new Error("Uploaded food image is empty.");
+  }
+
+  const safeMimeType =
+    typeof mimeType === "string" && mimeType.startsWith("image/")
+      ? mimeType
+      : "image/jpeg";
+
+  const prompt = `
+Identify the food shown in this image and estimate nutrition for the complete visible serving.
+
+Return:
+- a short meal name
+- an estimated visible quantity, such as "1 plate (350 g)"
+- total calories
+- protein in grams
+- carbohydrates in grams
+- fat in grams
+- confidence from 0 to 100
+
+Important:
+- Estimate the complete visible serving, not values per 100 g.
+- For Indian mixed dishes, identify the most likely dish and major visible components.
+- Use realistic whole-number estimates.
+- Even when uncertain, return a conservative estimate with lower confidence.
+`;
+
+  const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      const parsed = await analyzeWithModel(
+        model,
+        imageBuffer,
+        safeMimeType,
+        prompt
+      );
+
+      return {
+        mealName: String(parsed.mealName || "Detected meal").trim(),
+        quantity: String(parsed.quantity || "1 serving").trim(),
+        calories: numberOrZero(parsed.calories),
+        protein: numberOrZero(parsed.protein),
+        carbs: numberOrZero(parsed.carbs),
+        fat: numberOrZero(parsed.fat),
+        confidence: Math.min(100, numberOrZero(parsed.confidence)),
+      };
+    } catch (error) {
+      lastError = error;
+      console.error(`Food analysis failed with ${model}:`, error);
+    }
+  }
+
+  throw new Error(
+    lastError?.message || "Gemini could not analyze the food image."
+  );
 }

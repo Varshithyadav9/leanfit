@@ -13,6 +13,9 @@ function Dashboard({ formData, setPage }) {
   const [photoUploadError, setPhotoUploadError] = useState("");
   const [loggedMeals, setLoggedMeals] = useState([]);
   const [history, setHistory] = useState([]);
+  const [barcode, setBarcode] = useState("");
+  const [barcodeStatus, setBarcodeStatus] = useState("");
+  const [lookingUpBarcode, setLookingUpBarcode] = useState(false);
 
   const [mealForm, setMealForm] = useState({
     mealName: "",
@@ -184,6 +187,87 @@ function Dashboard({ formData, setPage }) {
     } finally {
       setUploadingPhoto(false);
       setAnalyzingPhoto(false);
+    }
+  };
+
+  const applyBarcodeProduct = (product) => {
+    setMealForm({
+      mealName: product.mealName || "",
+      quantity: product.quantity || "1 serving",
+      calories: String(product.calories ?? ""),
+      protein: String(product.protein ?? ""),
+      carbs: String(product.carbs ?? ""),
+      fat: String(product.fat ?? ""),
+    });
+
+    setUploadedImageUrl(product.imageUrl || "");
+    setMealPhotoPreview(product.imageUrl || null);
+    setAiConfidence(0);
+  };
+
+  const lookupBarcode = async (barcodeValue = barcode) => {
+    const cleanBarcode = String(barcodeValue || "").replace(/\D/g, "");
+
+    if (cleanBarcode.length < 8) {
+      setBarcodeStatus("Enter or scan a valid barcode.");
+      return;
+    }
+
+    setBarcode(cleanBarcode);
+    setBarcodeStatus("Looking up product...");
+    setLookingUpBarcode(true);
+
+    try {
+      const response = await fetch(
+        `https://leanfit.onrender.com/api/food/barcode/${cleanBarcode}`
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Product not found.");
+      }
+
+      applyBarcodeProduct(data.product);
+      setBarcodeStatus("Product found. Nutrition fields were filled automatically.");
+    } catch (error) {
+      setBarcodeStatus(error.message || "Unable to look up this barcode.");
+    } finally {
+      setLookingUpBarcode(false);
+    }
+  };
+
+  const handleBarcodeImage = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!("BarcodeDetector" in window)) {
+      setBarcodeStatus(
+        "Automatic scanning is not supported in this browser. Enter the barcode number manually."
+      );
+      return;
+    }
+
+    setBarcodeStatus("Scanning barcode...");
+
+    try {
+      const detector = new window.BarcodeDetector({
+        formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"],
+      });
+      const bitmap = await createImageBitmap(file);
+      const results = await detector.detect(bitmap);
+
+      if (!results.length) {
+        setBarcodeStatus("No barcode detected. Try a clearer photo or enter it manually.");
+        return;
+      }
+
+      const detectedBarcode = results[0].rawValue;
+      setBarcode(detectedBarcode);
+      await lookupBarcode(detectedBarcode);
+    } catch (error) {
+      setBarcodeStatus("Could not scan this image. Try again or enter the barcode manually.");
+    } finally {
+      event.target.value = "";
     }
   };
 
@@ -378,6 +462,49 @@ function Dashboard({ formData, setPage }) {
           </div>
         </div>
 
+        <div className="barcode-scanner-card">
+          <h4>Scan Packaged Food Barcode</h4>
+          <p>Take a clear photo of the barcode or enter the number manually.</p>
+
+          <div className="form-grid two-col">
+            <div>
+              <label>Barcode Number</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Enter 8–14 digit barcode"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value.replace(/\D/g, ""))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") lookupBarcode();
+                }}
+              />
+            </div>
+
+            <div>
+              <label>Scan Barcode Photo</label>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleBarcodeImage}
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="secondary-btn full-btn"
+            onClick={() => lookupBarcode()}
+            disabled={lookingUpBarcode}
+          >
+            {lookingUpBarcode ? "Searching Product..." : "Find Product"}
+          </button>
+
+          {barcodeStatus && <p className="barcode-status">{barcodeStatus}</p>}
+        </div>
+
+        <h4>Or Upload a Meal Photo</h4>
         <input
           type="file"
           accept="image/*"

@@ -1,49 +1,49 @@
 import { useState } from "react";
 
+const API_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
+
 function CustomerAuth({ setPage }) {
-  const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    mobile: "",
-    password: "",
-  });
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const updateField = (field, value) => {
-    setForm({ ...form, [field]: value });
-  };
-
-  const submitAuth = async () => {
+  const submitLogin = async () => {
     setMessage("");
 
-    const endpoint =
-      mode === "login"
-        ? "https://leanfit.onrender.com/api/customer/login"
-        : "https://leanfit.onrender.com/api/customer/register";
+    if (!identifier.trim() || !password) {
+      setMessage("Enter your email or mobile number and password.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${API_URL}/api/customer/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: identifier.trim(),
+          email: identifier.trim(),
+          phone: identifier.trim(),
+          password,
+        }),
       });
 
       const data = await response.json();
 
-      if (!data.success) {
-        setMessage(data.message || "Something went wrong");
-        return;
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Login failed.");
       }
 
       localStorage.setItem("leanfitCustomer", JSON.stringify(data.customer));
-      localStorage.setItem("leanfitToken", data.token);
-
+      localStorage.setItem("leanfitToken", data.token || "");
       setPage("customer-portal");
     } catch (error) {
-      setMessage("Server error. Please try again.");
+      setMessage(error.message || "Server error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,75 +51,73 @@ function CustomerAuth({ setPage }) {
     <main className="page">
       <section className="card auth-card">
         <p className="brand-label">LEANFIT CUSTOMER</p>
-        <h2>{mode === "login" ? "Customer Login" : "Create Customer Account"}</h2>
-
+        <h2>Customer Login</h2>
         <p className="muted">
-          Login to view your orders, download PDFs and access Lean Pro.
+          Login using the email ID or mobile number used while creating your profile.
         </p>
 
-        {mode === "register" && (
-          <div>
-            <label>Name</label>
-            <input
-              type="text"
-              placeholder="Enter your name"
-              value={form.name}
-              onChange={(e) => updateField("name", e.target.value)}
-            />
-          </div>
-        )}
-
         <div>
-          <label>Email</label>
+          <label>Email ID or Mobile Number</label>
           <input
-            type="email"
-            placeholder="Enter email"
-            value={form.email}
-            onChange={(e) => updateField("email", e.target.value)}
+            type="text"
+            autoComplete="username"
+            placeholder="Enter email or mobile number"
+            value={identifier}
+            onChange={(event) => setIdentifier(event.target.value)}
           />
         </div>
 
-        {mode === "register" && (
-          <div>
-            <label>Mobile</label>
-            <input
-              type="tel"
-              placeholder="Enter mobile"
-              value={form.mobile}
-              onChange={(e) => updateField("mobile", e.target.value)}
-            />
-          </div>
-        )}
-
         <div>
           <label>Password</label>
-          <input
-            type="password"
-            placeholder="Enter password"
-            value={form.password}
-            onChange={(e) => updateField("password", e.target.value)}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") submitLogin();
+              }}
+              style={{ paddingRight: "48px" }}
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              title={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((current) => !current)}
+              style={{
+                position: "absolute",
+                right: "8px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                padding: "6px",
+              }}
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </button>
+          </div>
         </div>
 
         {message && <p className="error-text">{message}</p>}
 
-        <button className="primary-btn full-btn" onClick={submitAuth}>
-          {mode === "login" ? "Login" : "Create Account"}
-        </button>
-
         <button
-          className="text-btn"
-          onClick={() => {
-            setMessage("");
-            setMode(mode === "login" ? "register" : "login");
-          }}
+          className="primary-btn full-btn"
+          type="button"
+          disabled={loading}
+          onClick={submitLogin}
         >
-          {mode === "login"
-            ? "New customer? Create account"
-            : "Already have an account? Login"}
+          {loading ? "Logging In..." : "Login"}
         </button>
 
-        <button className="text-btn" onClick={() => setPage("welcome")}>
+        <button className="text-btn" type="button" onClick={() => setPage("login")}>
+          New customer? Create account
+        </button>
+
+        <button className="text-btn" type="button" onClick={() => setPage("welcome")}>
           Back to Home
         </button>
       </section>

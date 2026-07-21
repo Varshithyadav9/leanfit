@@ -78,4 +78,86 @@ router.post("/food/upload", upload.single("mealPhoto"), async (req, res) => {
   }
 });
 
+router.get("/food/barcode/:barcode", async (req, res) => {
+  try {
+    const barcode = String(req.params.barcode || "").replace(/\D/g, "");
+
+    if (barcode.length < 8 || barcode.length > 14) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid barcode.",
+      });
+    }
+
+    const response = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`
+    );
+
+    if (!response.ok) {
+      throw new Error("Barcode service is unavailable.");
+    }
+
+    const data = await response.json();
+    const product = data.product;
+
+    if (data.status !== 1 || !product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found. You can enter the nutrition details manually.",
+      });
+    }
+
+    const nutrients = product.nutriments || {};
+    const servingSize = product.serving_size || product.quantity || "1 serving";
+
+    const firstNumber = (...values) => {
+      for (const value of values) {
+        const number = Number(value);
+        if (Number.isFinite(number)) return Math.round(number * 10) / 10;
+      }
+      return 0;
+    };
+
+    const normalizedProduct = {
+      barcode,
+      mealName:
+        product.product_name ||
+        product.product_name_en ||
+        product.generic_name ||
+        "Packaged food",
+      quantity: servingSize,
+      calories: firstNumber(
+        nutrients["energy-kcal_serving"],
+        nutrients["energy-kcal_100g"]
+      ),
+      protein: firstNumber(nutrients.proteins_serving, nutrients.proteins_100g),
+      carbs: firstNumber(
+        nutrients.carbohydrates_serving,
+        nutrients.carbohydrates_100g
+      ),
+      fat: firstNumber(nutrients.fat_serving, nutrients.fat_100g),
+      imageUrl:
+        product.image_front_url ||
+        product.image_url ||
+        product.image_front_small_url ||
+        "",
+      brand: Array.isArray(product.brands_tags)
+        ? product.brands_tags[0] || ""
+        : product.brands || "",
+    };
+
+    return res.json({
+      success: true,
+      product: normalizedProduct,
+    });
+  } catch (error) {
+    console.error("Barcode lookup failed:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to look up this barcode right now.",
+    });
+  }
+});
+
 export default router;
