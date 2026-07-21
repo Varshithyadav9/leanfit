@@ -101,11 +101,13 @@ router.post("/food/upload", upload.single("mealPhoto"), async (req, res) => {
   } catch (error) {
     console.error("Food analysis failed:", error);
 
-    return res.status(500).json({
+    const status = Number(error?.status) === 503 ? 503 : 500;
+
+    return res.status(status).json({
       success: false,
       message:
         error.message ||
-        "The meal photo could not be analyzed. Please try a JPG or PNG image.",
+        "Food analysis is temporarily unavailable. Please try again shortly.",
     });
   } finally {
     if (convertedPath) {
