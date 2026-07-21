@@ -1,74 +1,137 @@
 import { useState } from "react";
 
+const API_BASE_URL = "https://leanfit.onrender.com/api";
+
 function PaymentPage({ formData, setPage, setGeneratedPlan }) {
-  const [paymentDone, setPaymentDone] = useState(false);
-  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
-  const [generating, setGenerating] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
 
-  const upiId = "varshith0409@axl";
-  const payeeName = "Lean Varshith";
-
   const selectedPlan = formData.selectedPlan || "No plan selected";
-  const selectedPrice = formData.selectedPrice || 0;
+  const selectedPrice = Number(formData.selectedPrice || 0);
 
-  const paymentLink =
-    selectedPrice > 0
-      ? `upi://pay?pa=${upiId}&pn=${encodeURIComponent(
-          payeeName
-        )}&am=${selectedPrice}&cu=INR&tn=${encodeURIComponent(selectedPlan)}`
-      : "#";
+  const loadRazorpayScript = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
 
-  const submitOrder = async () => {
-    setGenerating(true);
-    setError("");
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
 
-    if (!paymentScreenshot) {
-      setError("Please upload payment screenshot.");
-      setGenerating(false);
+  const startPayment = async () => {
+    if (!selectedPrice || !formData.selectedPlan) {
+      setError("Please select a plan first.");
       return;
     }
 
-    try {
-      const orderFormData = new FormData();
-      orderFormData.append("userData", JSON.stringify(formData));
-      orderFormData.append("paymentScreenshot", paymentScreenshot);
+    setProcessing(true);
+    setError("");
 
-      const response = await fetch("https://leanfit.onrender.com/api/generate-plan", {
+    try {
+      const scriptLoaded = await loadRazorpayScript();
+
+      if (!scriptLoaded) {
+        throw new Error("Razorpay could not load. Check your internet and try again.");
+      }
+
+      const createResponse = await fetch(`${API_BASE_URL}/razorpay/create-order`, {
         method: "POST",
-        body: orderFormData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userData: formData }),
       });
 
-      const data = await response.json();
+      const createData = await createResponse.json();
 
-      if (!data.success) {
-        throw new Error(data.message || "Order failed");
+      if (!createResponse.ok || !createData.success) {
+        throw new Error(createData.message || "Unable to start payment.");
       }
 
-      setGeneratedPlan(data.plan);
+      const options = {
+        key: createData.keyId,
+        amount: createData.order.amount,
+        currency: createData.order.currency,
+        name: "LeanFit",
+        description: selectedPlan,
+        order_id: createData.order.id,
+        prefill: {
+          name: formData.name || "",
+          email: formData.email || "",
+          contact: formData.mobile || "",
+        },
+        notes: {
+          plan: selectedPlan,
+        },
+        theme: {
+          color: "#16a34a",
+        },
+        handler: async (paymentResponse) => {
+          try {
+            const verifyResponse = await fetch(
+              `${API_BASE_URL}/razorpay/verify-payment`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userData: formData,
+                  ...paymentResponse,
+                }),
+              }
+            );
 
-      if (formData.selectedPlan === "Lean Pro Membership") {
-        setPage("dashboard");
-      } else {
-        setPage("success");
-      }
-    } catch (err) {
-      setError(err.message || "Unable to submit order.");
-    } finally {
-      setGenerating(false);
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyResponse.ok || !verifyData.success) {
+              throw new Error(verifyData.message || "Payment verification failed.");
+            }
+
+            setGeneratedPlan(verifyData.plan || "");
+
+            if (verifyData.dashboardAccess) {
+              setPage("dashboard");
+            } else {
+              setPage("success");
+            }
+          } catch (verificationError) {
+            setError(
+              verificationError.message ||
+                "Payment was made, but verification failed. Contact support with your payment ID."
+            );
+          } finally {
+            setProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessing(false);
+            setError("Payment was cancelled. You can try again.");
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", (response) => {
+        setProcessing(false);
+        setError(response.error?.description || "Payment failed. Please try again.");
+      });
+      razorpay.open();
+    } catch (paymentError) {
+      setProcessing(false);
+      setError(paymentError.message || "Unable to start payment.");
     }
   };
 
   return (
     <main className="page">
       <section className="card">
-        <p className="brand-label">PAYMENT</p>
-
+        <p className="brand-label">SECURE PAYMENT</p>
         <h2>Complete Your Order</h2>
-
         <p className="muted">
-          Pay using UPI, return to this page, upload the payment screenshot and
-          submit your order.
+          Pay securely using UPI, card, net banking or another method available in Razorpay.
         </p>
 
         <div className="selected-plan-box">
@@ -79,80 +142,25 @@ function PaymentPage({ formData, setPage, setGeneratedPlan }) {
 
         <div className="summary-box">
           <h3>Order Summary</h3>
-
-          <p>
-            <strong>Name:</strong> {formData.name || "Not specified"}
-          </p>
-
-          <p>
-            <strong>Plan:</strong> {selectedPlan}
-          </p>
-
-          <p>
-            <strong>Amount:</strong> ₹{selectedPrice}
-          </p>
-
-          <p>
-            <strong>UPI ID:</strong> {upiId}
-          </p>
+          <p><strong>Name:</strong> {formData.name || "Not specified"}</p>
+          <p><strong>Email:</strong> {formData.email || "Not specified"}</p>
+          <p><strong>Plan:</strong> {selectedPlan}</p>
+          <p><strong>Amount:</strong> ₹{selectedPrice}</p>
         </div>
 
-        <div className="payment-box">
-          {selectedPrice > 0 ? (
-            <a href={paymentLink}>
-              <button className="primary-btn full-btn" type="button">
-                Pay ₹{selectedPrice} Now
-              </button>
-            </a>
-          ) : (
-            <button className="primary-btn full-btn" disabled>
-              Select a Plan First
-            </button>
-          )}
+        <button
+          className="primary-btn full-btn"
+          type="button"
+          onClick={startPayment}
+          disabled={processing || selectedPrice <= 0}
+        >
+          {processing ? "Processing Payment..." : `Pay ₹${selectedPrice} Securely`}
+        </button>
 
-          <button
-            className="secondary-btn full-btn"
-            type="button"
-            disabled={selectedPrice <= 0}
-            onClick={() => setPaymentDone(true)}
-          >
-            I Have Completed Payment
-          </button>
-        </div>
-
-        {paymentDone && (
-          <div className="proof-box">
-            <h3>Upload Payment Screenshot</h3>
-
-            <p className="muted">
-              Upload your PhonePe / Google Pay / Paytm payment screenshot.
-            </p>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setPaymentScreenshot(e.target.files[0])}
-            />
-
-            {paymentScreenshot && (
-              <p className="muted">Selected: {paymentScreenshot.name}</p>
-            )}
-
-            <button
-              className="primary-btn full-btn"
-              onClick={submitOrder}
-              disabled={generating}
-              type="button"
-            >
-              {generating ? "Submitting Order..." : "Submit Order"}
-            </button>
-
-            {error && <p className="error-text">{error}</p>}
-          </div>
-        )}
+        {error && <p className="error-text">{error}</p>}
 
         <div className="page-actions">
-          <button className="text-btn" onClick={() => setPage("plans")}>
+          <button className="text-btn" onClick={() => setPage("plans")} disabled={processing}>
             Previous
           </button>
         </div>
