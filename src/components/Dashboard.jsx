@@ -16,6 +16,10 @@ function Dashboard({ formData, setPage }) {
   const [barcode, setBarcode] = useState("");
   const [barcodeStatus, setBarcodeStatus] = useState("");
   const [lookingUpBarcode, setLookingUpBarcode] = useState(false);
+  const [voiceText, setVoiceText] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [analyzingVoice, setAnalyzingVoice] = useState(false);
 
   const [mealForm, setMealForm] = useState({
     mealName: "",
@@ -271,6 +275,103 @@ function Dashboard({ formData, setPage }) {
     }
   };
 
+
+  const applyVoiceAnalysis = (analysis) => {
+    setMealForm({
+      mealName: analysis.mealName || "",
+      quantity: analysis.quantity || "1 serving",
+      calories: String(analysis.calories ?? ""),
+      protein: String(analysis.protein ?? ""),
+      carbs: String(analysis.carbs ?? ""),
+      fat: String(analysis.fat ?? ""),
+    });
+
+    setAiConfidence(Number(analysis.confidence || 0));
+    setUploadedImageUrl("");
+    setMealPhotoPreview(null);
+    setPhotoUploadError("");
+  };
+
+  const analyzeVoiceMeal = async (text = voiceText) => {
+    const cleanText = String(text || "").trim();
+
+    if (!cleanText) {
+      setVoiceStatus("Speak or type a meal description first.");
+      return;
+    }
+
+    setAnalyzingVoice(true);
+    setVoiceStatus("Estimating nutrition...");
+
+    try {
+      const response = await fetch(
+        "https://leanfit.onrender.com/api/food/voice",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: cleanText }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to analyze this meal.");
+      }
+
+      applyVoiceAnalysis(data.analysis || {});
+      setVoiceStatus("Nutrition fields filled automatically. Review before adding.");
+    } catch (error) {
+      setVoiceStatus(error.message || "Unable to analyze this meal.");
+    } finally {
+      setAnalyzingVoice(false);
+    }
+  };
+
+  const startVoiceLogging = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setVoiceStatus(
+        "Voice recognition is not supported in this browser. Type the meal below."
+      );
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    setVoiceStatus("Listening... Speak your meal now.");
+    setIsListening(true);
+
+    recognition.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || "";
+      setVoiceText(transcript);
+      setVoiceStatus(`Heard: "${transcript}"`);
+      analyzeVoiceMeal(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      const message =
+        event.error === "not-allowed"
+          ? "Microphone permission was denied."
+          : "Could not understand the meal. Please try again.";
+      setVoiceStatus(message);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   const updateMealForm = (field, value) => {
     setMealForm({ ...mealForm, [field]: value });
   };
@@ -460,6 +561,57 @@ function Dashboard({ formData, setPage }) {
             <h3>Food Tracker</h3>
             <p>Upload food photo and enter nutrition details.</p>
           </div>
+        </div>
+
+
+        <div className="barcode-scanner-card">
+          <h4>Voice Meal Logging</h4>
+          <p>
+            Tap the microphone and say your meal, for example:
+            "Two boiled eggs and one banana."
+          </p>
+
+          <div className="form-grid two-col">
+            <div>
+              <label>Meal Description</label>
+              <input
+                type="text"
+                placeholder="Example: 200g grilled chicken with rice"
+                value={voiceText}
+                onChange={(e) => setVoiceText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") analyzeVoiceMeal();
+                }}
+              />
+            </div>
+
+            <div>
+              <label>Voice Input</label>
+              <button
+                type="button"
+                className="secondary-btn full-btn"
+                onClick={startVoiceLogging}
+                disabled={isListening || analyzingVoice}
+              >
+                {isListening
+                  ? "Listening..."
+                  : analyzingVoice
+                  ? "Analyzing Meal..."
+                  : "🎤 Speak Meal"}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="secondary-btn full-btn"
+            onClick={() => analyzeVoiceMeal()}
+            disabled={analyzingVoice}
+          >
+            {analyzingVoice ? "Estimating Nutrition..." : "Analyze Meal Description"}
+          </button>
+
+          {voiceStatus && <p className="barcode-status">{voiceStatus}</p>}
         </div>
 
         <div className="barcode-scanner-card">

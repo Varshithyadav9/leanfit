@@ -517,3 +517,222 @@ Rules:
   friendlyError.status = 503;
   throw friendlyError;
 }
+
+const voiceMealResponseSchema = {
+  type: "object",
+  properties: {
+    mealName: { type: "string" },
+    quantity: { type: "string" },
+    calories: { type: "number" },
+    protein: { type: "number" },
+    carbs: { type: "number" },
+    fat: { type: "number" },
+    confidence: { type: "number" },
+  },
+  required: [
+    "mealName",
+    "quantity",
+    "calories",
+    "protein",
+    "carbs",
+    "fat",
+    "confidence",
+  ],
+  additionalProperties: false,
+};
+
+function normalizeVoiceText(value = "") {
+  return String(value)
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 500);
+}
+
+function localVoiceMealFallback(spokenText = "") {
+  const text = normalizeVoiceText(spokenText).toLowerCase();
+
+  const knownMeals = [
+    {
+      terms: ["chicken biryani", "biryani"],
+      result: {
+        mealName: "Chicken biryani",
+        quantity: text.match(/half/) ? "1/2 plate (200 g)" : "1 plate (350 g)",
+        calories: text.match(/half/) ? 360 : 620,
+        protein: text.match(/half/) ? 19 : 32,
+        carbs: text.match(/half/) ? 45 : 78,
+        fat: text.match(/half/) ? 12 : 20,
+      },
+    },
+    {
+      terms: ["boiled egg", "boiled eggs", "egg", "eggs"],
+      result: {
+        mealName: "Boiled eggs",
+        quantity: text.match(/\b(three|3)\b/) ? "3 eggs" : text.match(/\b(one|1)\b/) ? "1 egg" : "2 eggs",
+        calories: text.match(/\b(three|3)\b/) ? 234 : text.match(/\b(one|1)\b/) ? 78 : 156,
+        protein: text.match(/\b(three|3)\b/) ? 19 : text.match(/\b(one|1)\b/) ? 6 : 13,
+        carbs: 2,
+        fat: text.match(/\b(three|3)\b/) ? 16 : text.match(/\b(one|1)\b/) ? 5 : 11,
+      },
+    },
+    {
+      terms: ["idli", "idly"],
+      result: {
+        mealName: "Idli with sambar",
+        quantity: text.match(/\b(three|3)\b/) ? "3 idlis with sambar" : "4 idlis with sambar",
+        calories: text.match(/\b(three|3)\b/) ? 330 : 410,
+        protein: text.match(/\b(three|3)\b/) ? 11 : 14,
+        carbs: text.match(/\b(three|3)\b/) ? 57 : 72,
+        fat: text.match(/\b(three|3)\b/) ? 6 : 7,
+      },
+    },
+    {
+      terms: ["dosa"],
+      result: {
+        mealName: "Dosa with chutney and sambar",
+        quantity: "1 large dosa",
+        calories: 390,
+        protein: 10,
+        carbs: 58,
+        fat: 13,
+      },
+    },
+    {
+      terms: ["grilled chicken", "chicken breast"],
+      result: {
+        mealName: "Grilled chicken",
+        quantity: text.match(/200\s*(g|gram)/) ? "200 g" : "150 g",
+        calories: text.match(/200\s*(g|gram)/) ? 330 : 248,
+        protein: text.match(/200\s*(g|gram)/) ? 62 : 47,
+        carbs: 0,
+        fat: text.match(/200\s*(g|gram)/) ? 7 : 5,
+      },
+    },
+    {
+      terms: ["paneer"],
+      result: {
+        mealName: "Paneer meal",
+        quantity: text.match(/200\s*(g|gram)/) ? "200 g" : "150 g",
+        calories: text.match(/200\s*(g|gram)/) ? 530 : 400,
+        protein: text.match(/200\s*(g|gram)/) ? 36 : 27,
+        carbs: text.match(/200\s*(g|gram)/) ? 10 : 8,
+        fat: text.match(/200\s*(g|gram)/) ? 40 : 30,
+      },
+    },
+    {
+      terms: ["banana"],
+      result: {
+        mealName: "Banana",
+        quantity: text.match(/\b(two|2)\b/) ? "2 medium bananas" : "1 medium banana",
+        calories: text.match(/\b(two|2)\b/) ? 210 : 105,
+        protein: text.match(/\b(two|2)\b/) ? 3 : 1,
+        carbs: text.match(/\b(two|2)\b/) ? 54 : 27,
+        fat: 1,
+      },
+    },
+    {
+      terms: ["oats"],
+      result: {
+        mealName: "Oats",
+        quantity: "1 bowl (250 g)",
+        calories: 300,
+        protein: 11,
+        carbs: 48,
+        fat: 8,
+      },
+    },
+  ];
+
+  const match = knownMeals.find((item) =>
+    item.terms.some((term) => text.includes(term))
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    ...match.result,
+    confidence: 35,
+    fallbackEstimate: true,
+  };
+}
+
+export async function analyzeVoiceMeal(spokenText) {
+  const cleanText = normalizeVoiceText(spokenText);
+
+  if (!cleanText) {
+    const error = new Error("Please speak or enter a meal description.");
+    error.status = 400;
+    throw error;
+  }
+
+  const prompt = `
+Convert this spoken meal description into a nutrition estimate for LeanFit:
+
+"${cleanText}"
+
+Return one JSON object containing:
+- mealName: short clear meal name
+- quantity: estimated total serving
+- calories: total calories for the serving
+- protein: grams
+- carbs: grams
+- fat: grams
+- confidence: integer from 0 to 100
+
+Rules:
+- Interpret natural phrases such as "one plate", "two eggs", "200 grams", and Indian meal names.
+- Include all foods mentioned in the combined meal.
+- Estimate the whole spoken serving, not per 100 g.
+- Use realistic whole numbers.
+- Return no explanation.
+`;
+
+  let lastError = null;
+
+  for (const model of MODEL_CANDIDATES) {
+    try {
+      const response = await generateWithRetry(
+        () =>
+          ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: {
+              responseMimeType: "application/json",
+              responseSchema: voiceMealResponseSchema,
+              temperature: 0.1,
+              maxOutputTokens: 700,
+            },
+          }),
+        { attempts: 3, baseDelayMs: 1000 }
+      );
+
+      const parsed = extractJsonObject(extractResponseText(response));
+
+      return {
+        mealName: String(parsed.mealName || "Spoken meal").trim(),
+        quantity: String(parsed.quantity || "1 serving").trim(),
+        calories: numberOrZero(parsed.calories),
+        protein: numberOrZero(parsed.protein),
+        carbs: numberOrZero(parsed.carbs),
+        fat: numberOrZero(parsed.fat),
+        confidence: Math.min(100, numberOrZero(parsed.confidence)),
+        fallbackEstimate: false,
+      };
+    } catch (error) {
+      lastError = error;
+      console.error(`Voice meal analysis failed with ${model}:`, error.message);
+    }
+  }
+
+  const fallback = localVoiceMealFallback(cleanText);
+
+  if (fallback) {
+    return fallback;
+  }
+
+  const friendlyError = new Error(cleanGeminiError(lastError));
+  friendlyError.status = 503;
+  throw friendlyError;
+}
+

@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import sharp from "sharp";
 import { fileURLToPath } from "url";
-import { analyzeFoodImage } from "../services/geminiService.js";
+import { analyzeFoodImage, analyzeVoiceMeal } from "../services/geminiService.js";
 
 const router = express.Router();
 
@@ -113,6 +113,45 @@ router.post("/food/upload", upload.single("mealPhoto"), async (req, res) => {
     if (convertedPath) {
       fs.promises.unlink(convertedPath).catch(() => {});
     }
+  }
+});
+
+
+router.post("/food/voice", async (req, res) => {
+  try {
+    const spokenText = String(req.body?.text || "").trim();
+
+    if (!spokenText) {
+      return res.status(400).json({
+        success: false,
+        message: "Please speak or enter a meal description.",
+      });
+    }
+
+    const analysis = await analyzeVoiceMeal(spokenText);
+
+    return res.status(200).json({
+      success: true,
+      message: "Voice meal analyzed successfully.",
+      transcript: spokenText,
+      analysis,
+    });
+  } catch (error) {
+    console.error("Voice meal analysis failed:", error);
+
+    const status =
+      Number(error?.status) === 400
+        ? 400
+        : Number(error?.status) === 503
+        ? 503
+        : 500;
+
+    return res.status(status).json({
+      success: false,
+      message:
+        error.message ||
+        "Voice meal analysis is temporarily unavailable. Please try again shortly.",
+    });
   }
 });
 
