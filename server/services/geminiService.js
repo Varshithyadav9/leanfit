@@ -171,7 +171,7 @@ This is a general fitness guideline and not medical advice.
 export async function generateDietPlan(userData) {
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: buildPrompt(userData),
     });
 
@@ -191,7 +191,7 @@ function extractJsonObject(value = "") {
   const end = cleaned.lastIndexOf("}");
 
   if (start === -1 || end === -1 || end <= start) {
-    throw new Error(`Gemini returned invalid meal data: ${cleaned.slice(0, 200)}`);
+    throw new Error("Gemini did not return valid meal data.");
   }
 
   return JSON.parse(cleaned.slice(start, end + 1));
@@ -211,12 +211,12 @@ export async function analyzeFoodImage(imagePath, mimeType = "image/jpeg") {
   const imageBuffer = await fs.readFile(imagePath);
 
   const prompt = `
-Analyze the complete visible food serving in this image.
+Analyze this food photo for LeanFit.
 
-Return ONLY valid JSON:
+Return ONLY one valid JSON object with exactly these keys:
 {
   "mealName": "short food name",
-  "quantity": "estimated visible serving, such as 1 plate (350 g)",
+  "quantity": "estimated visible serving, for example 1 plate (300 g)",
   "calories": 0,
   "protein": 0,
   "carbs": 0,
@@ -225,15 +225,16 @@ Return ONLY valid JSON:
 }
 
 Rules:
-- Values must represent the full visible serving, not per 100 g.
-- Identify Indian dishes accurately when possible.
-- Use whole-number nutrition estimates.
-- confidence must be from 0 to 100.
-- Return JSON only, without markdown or explanation.
+- Estimate nutrition for the complete visible serving, not per 100 g.
+- Use whole-number estimates.
+- confidence must be an integer from 0 to 100.
+- For mixed Indian dishes, identify the most likely dish and include major visible components.
+- If the image is unclear, still provide a conservative estimate and lower confidence.
+- Do not include markdown, explanations, notes, ranges, units inside numeric values, or extra keys.
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.5-flash",
     contents: [
       {
         role: "user",
@@ -250,19 +251,11 @@ Rules:
     ],
     config: {
       responseMimeType: "application/json",
-      temperature: 0.1,
-      maxOutputTokens: 500,
+      temperature: 0.2,
     },
   });
 
-  const responseText =
-    typeof response.text === "function" ? response.text() : response.text;
-
-  if (!responseText) {
-    throw new Error("Gemini returned an empty food-analysis response.");
-  }
-
-  const parsed = extractJsonObject(responseText);
+  const parsed = extractJsonObject(response.text);
 
   return {
     mealName: String(parsed.mealName || "Detected meal").trim(),
