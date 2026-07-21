@@ -20,6 +20,9 @@ function Dashboard({ formData, setPage }) {
   const [voiceStatus, setVoiceStatus] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [analyzingVoice, setAnalyzingVoice] = useState(false);
+  const [weeklyReport, setWeeklyReport] = useState(null);
+  const [weeklyReportStatus, setWeeklyReportStatus] = useState("");
+  const [loadingWeeklyReport, setLoadingWeeklyReport] = useState(false);
 
   const [mealForm, setMealForm] = useState({
     mealName: "",
@@ -47,6 +50,7 @@ function Dashboard({ formData, setPage }) {
 
     loadProgress(parsedCustomer.email);
     loadHistory(parsedCustomer.email);
+    loadWeeklyReport(parsedCustomer.email);
   }, []);
 
   const loadProgress = async (email) => {
@@ -83,6 +87,45 @@ function Dashboard({ formData, setPage }) {
     }
   };
 
+
+  const loadWeeklyReport = async (email = customer?.email) => {
+    if (!email) return;
+
+    setLoadingWeeklyReport(true);
+    setWeeklyReportStatus("Preparing your weekly report...");
+
+    try {
+      const response = await fetch(
+        `https://leanfit.onrender.com/api/progress/weekly-report/${encodeURIComponent(
+          email
+        )}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to load weekly report.");
+      }
+
+      setWeeklyReport(data.report || null);
+      setWeeklyReportStatus("");
+    } catch (error) {
+      setWeeklyReportStatus(
+        error.message || "Unable to load weekly report right now."
+      );
+    } finally {
+      setLoadingWeeklyReport(false);
+    }
+  };
+
+  const formatWeightChange = (value) => {
+    const number = Number(value || 0);
+
+    if (number > 0) return `+${number} kg`;
+    if (number < 0) return `${number} kg`;
+    return "No change";
+  };
+
   const saveProgress = async (updatedMeals, updatedWater, updatedWeight) => {
     if (!customer?.email) return;
 
@@ -102,6 +145,7 @@ function Dashboard({ formData, setPage }) {
       });
 
       loadHistory(customer.email);
+      loadWeeklyReport(customer.email);
     } catch (error) {
       console.log(error);
     }
@@ -838,6 +882,126 @@ function Dashboard({ formData, setPage }) {
         <button className="primary-btn full-btn" onClick={saveWeight}>
           Save Weight
         </button>
+      </section>
+
+
+      <section className="dashboard-section">
+        <div className="section-head">
+          <div>
+            <h3>Weekly Progress Report</h3>
+            <p>Your nutrition, hydration, weight and consistency summary.</p>
+          </div>
+
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() => loadWeeklyReport()}
+            disabled={loadingWeeklyReport}
+          >
+            {loadingWeeklyReport ? "Preparing..." : "Refresh Report"}
+          </button>
+        </div>
+
+        {weeklyReportStatus && (
+          <p className="barcode-status">{weeklyReportStatus}</p>
+        )}
+
+        {!weeklyReport && !loadingWeeklyReport ? (
+          <div className="empty-state">
+            Log meals, water and weight to create your weekly report.
+          </div>
+        ) : weeklyReport ? (
+          <>
+            <div className="summary-grid">
+              <div className="summary-card">
+                <span>Weekly Score</span>
+                <strong>{weeklyReport.score || 0}/100</strong>
+                <p>{weeklyReport.daysLogged || 0} of 7 days logged</p>
+              </div>
+
+              <div className="summary-card">
+                <span>Average Calories</span>
+                <strong>{weeklyReport.averageCalories || 0} kcal</strong>
+                <p>{weeklyReport.calorieGoalPercent || 0}% of target</p>
+              </div>
+
+              <div className="summary-card">
+                <span>Average Protein</span>
+                <strong>{weeklyReport.averageProtein || 0}g</strong>
+                <p>{weeklyReport.proteinGoalPercent || 0}% of target</p>
+              </div>
+
+              <div className="summary-card">
+                <span>Average Water</span>
+                <strong>{weeklyReport.averageWater || 0}L</strong>
+                <p>{weeklyReport.waterGoalPercent || 0}% of target</p>
+              </div>
+
+              <div className="summary-card">
+                <span>Meals Logged</span>
+                <strong>{weeklyReport.mealsLogged || 0}</strong>
+                <p>During the last 7 records</p>
+              </div>
+
+              <div className="summary-card">
+                <span>Weight Change</span>
+                <strong>{formatWeightChange(weeklyReport.weightChange)}</strong>
+                <p>
+                  {weeklyReport.startingWeight > 0 &&
+                  weeklyReport.endingWeight > 0
+                    ? `${weeklyReport.startingWeight} → ${weeklyReport.endingWeight} kg`
+                    : "Add weight on at least two days"}
+                </p>
+              </div>
+            </div>
+
+            <div className="access-card">
+              <h3>Weekly Review</h3>
+              <p>{weeklyReport.summary}</p>
+            </div>
+
+            <div className="form-grid two-col">
+              <div className="access-card">
+                <h3>What Went Well</h3>
+                {(weeklyReport.strengths || []).length === 0 ? (
+                  <p>Continue logging to identify strengths.</p>
+                ) : (
+                  <ul>
+                    {(weeklyReport.strengths || []).map((item, index) => (
+                      <li key={`strength-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="access-card">
+                <h3>Needs Improvement</h3>
+                {(weeklyReport.improvements || []).length === 0 ? (
+                  <p>Keep following the current routine.</p>
+                ) : (
+                  <ul>
+                    {(weeklyReport.improvements || []).map((item, index) => (
+                      <li key={`improvement-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            <div className="access-card">
+              <h3>Goals for Next Week</h3>
+              {(weeklyReport.nextWeekGoals || []).length === 0 ? (
+                <p>Stay consistent with meals, water and weight tracking.</p>
+              ) : (
+                <ul>
+                  {(weeklyReport.nextWeekGoals || []).map((item, index) => (
+                    <li key={`goal-${index}`}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
+        ) : null}
       </section>
 
       <section className="dashboard-section">

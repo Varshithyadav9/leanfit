@@ -736,3 +736,168 @@ Rules:
   throw friendlyError;
 }
 
+const weeklyReportResponseSchema = {
+  type: "object",
+  properties: {
+    summary: { type: "string" },
+    strengths: {
+      type: "array",
+      items: { type: "string" },
+    },
+    improvements: {
+      type: "array",
+      items: { type: "string" },
+    },
+    nextWeekGoals: {
+      type: "array",
+      items: { type: "string" },
+    },
+  },
+  required: ["summary", "strengths", "improvements", "nextWeekGoals"],
+  additionalProperties: false,
+};
+
+function cleanStringList(value, fallback = []) {
+  if (!Array.isArray(value)) return fallback;
+
+  return value
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
+function buildWeeklyFallback(summary) {
+  const strengths = [];
+  const improvements = [];
+  const nextWeekGoals = [];
+
+  if (summary.daysLogged >= 5) {
+    strengths.push("You logged progress consistently during the week.");
+  } else if (summary.daysLogged > 0) {
+    strengths.push("You started tracking your nutrition and progress.");
+  }
+
+  if (summary.proteinGoalPercent >= 80) {
+    strengths.push("Protein intake was close to the daily goal.");
+  } else {
+    improvements.push("Increase protein by adding a source to each major meal.");
+  }
+
+  if (summary.waterGoalPercent >= 80) {
+    strengths.push("Water intake was reasonably consistent.");
+  } else {
+    improvements.push("Increase water intake gradually toward 3 litres per day.");
+  }
+
+  if (summary.calorieGoalPercent >= 80 && summary.calorieGoalPercent <= 110) {
+    strengths.push("Average calorie intake stayed close to the daily target.");
+  } else if (summary.averageCalories > 0) {
+    improvements.push("Keep average calories closer to the planned daily target.");
+  }
+
+  if (summary.mealsLogged < Math.max(7, summary.daysLogged * 2)) {
+    improvements.push("Log more meals so the weekly report becomes more accurate.");
+  }
+
+  if (!strengths.length) {
+    strengths.push("You have a clear starting point for improving consistency.");
+  }
+
+  if (!improvements.length) {
+    improvements.push("Continue the same routine and focus on steady consistency.");
+  }
+
+  nextWeekGoals.push(
+    `Log meals on at least ${Math.min(7, Math.max(4, summary.daysLogged + 1))} days.`
+  );
+  nextWeekGoals.push(
+    summary.proteinGoalPercent < 80
+      ? "Reach at least 80% of the daily protein goal."
+      : "Maintain protein intake at 80% or more of the daily goal."
+  );
+  nextWeekGoals.push(
+    summary.waterGoalPercent < 80
+      ? "Average at least 2.5 litres of water per day."
+      : "Maintain an average of 2.5–3 litres of water per day."
+  );
+
+  return {
+    summary:
+      summary.daysLogged === 0
+        ? "Start logging meals, water and weight to receive a useful weekly review."
+        : "Your report shows where consistency is strong and where small improvements can help next week.",
+    strengths: strengths.slice(0, 4),
+    improvements: improvements.slice(0, 4),
+    nextWeekGoals: nextWeekGoals.slice(0, 4),
+    fallbackReport: true,
+  };
+}
+
+export async function generateWeeklyProgressInsights(summary) {
+  const fallback = buildWeeklyFallback(summary);
+
+  if (!process.env.GEMINI_API_KEY || summary.daysLogged === 0) {
+    return fallback;
+  }
+
+  const prompt = `
+You are LeanFit's practical fitness progress coach.
+
+Create a short weekly progress review using this data:
+${JSON.stringify(summary, null, 2)}
+
+Return JSON containing:
+- summary: 1 or 2 short sentences
+- strengths: 2 to 4 short items
+- improvements: 2 to 4 short items
+- nextWeekGoals: 2 to 4 measurable short items
+
+Rules:
+- Do not mention AI, Gemini or generated content.
+- Do not diagnose health conditions.
+- Keep advice practical and supportive.
+- Do not shame the user.
+- Use the available data only.
+- If tracking data is incomplete, clearly encourage more consistent logging.
+`;
+
+  for (const model of MODEL_CANDIDATES) {
+    try {
+      const response = await generateWithRetry(
+        () =>
+          ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: {
+              responseMimeType: "application/json",
+              responseSchema: weeklyReportResponseSchema,
+              temperature: 0.2,
+              maxOutputTokens: 900,
+            },
+          }),
+        { attempts: 2, baseDelayMs: 900 }
+      );
+
+      const parsed = extractJsonObject(extractResponseText(response));
+
+      return {
+        summary: String(parsed.summary || fallback.summary).trim(),
+        strengths: cleanStringList(parsed.strengths, fallback.strengths),
+        improvements: cleanStringList(
+          parsed.improvements,
+          fallback.improvements
+        ),
+        nextWeekGoals: cleanStringList(
+          parsed.nextWeekGoals,
+          fallback.nextWeekGoals
+        ),
+        fallbackReport: false,
+      };
+    } catch (error) {
+      console.error(`Weekly report failed with ${model}:`, error.message);
+    }
+  }
+
+  return fallback;
+}
+
