@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_URL = (
+  import.meta.env.VITE_API_URL || "https://leanfit.onrender.com"
+).replace(/\/$/, "");
 
 function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
   const [mode, setMode] = useState(initialMode);
