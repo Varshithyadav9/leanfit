@@ -23,8 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment secrets
 .env
+.env.*
+!.env.example
 server/.env
-uploads/
-server/uploads/
-server/pdfs/
+server/.env.*
+!server/.env.example
+
+# Generated backend files
+server/uploads/*
+!server/uploads/.gitkeep
+server/pdfs/*
+!server/pdfs/.gitkeep

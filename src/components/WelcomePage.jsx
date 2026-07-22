@@ -1,59 +1,75 @@
 function WelcomePage({ setPage }) {
   return (
     <main className="welcome-page">
+      <header className="topbar">
+        <div>
+          <p className="topbar-brand">LEANFIT</p>
+          <p className="topbar-subtitle">By Varshith</p>
+        </div>
+
+        <button
+          className="admin-login-btn"
+          type="button"
+          onClick={() => {
+            window.location.href = "/admin";
+          }}
+        >
+          Admin Login
+        </button>
+      </header>
+
       <section className="hero">
-        <p className="brand-label">LEANFIT</p>
+        <div className="hero-content">
+          <p className="brand-label">PERSONALISED FITNESS SUPPORT</p>
+          <h1>Transform your body with a plan made for you.</h1>
+          <p className="hero-text">
+            Get practical Indian nutrition guidance, structured workouts and progress tracking based on your goal and lifestyle.
+          </p>
 
-        <h1>Transform Your Body with AI</h1>
+          <div className="hero-actions">
+            <button className="primary-btn" type="button" onClick={() => setPage("register")}>
+              Get My Plan
+            </button>
+            <button className="secondary-btn light" type="button" onClick={() => setPage("login")}>
+              Customer Login
+            </button>
+          </div>
+        </div>
 
-        <p className="hero-text">
-          Personalized Diet Plans • Workout Plans • Lean Pro Membership
-        </p>
-
-        <div className="hero-buttons">
-          <button
-            className="primary-btn"
-            onClick={() => setPage("login")}
-          >
-            Get My Plan
-          </button>
-
-          <button
-            className="secondary-btn"
-            onClick={() => setPage("customer-auth")}
-          >
-            Customer Login
-          </button>
-
-          <button
-            className="secondary-btn"
-            onClick={() => setPage("admin-login")}
-          >
-            Admin Login
-          </button>
+        <div className="hero-summary" aria-label="LeanFit features">
+          <div className="summary-item">
+            <strong>Nutrition</strong>
+            <span>Indian meal plans and macros</span>
+          </div>
+          <div className="summary-item">
+            <strong>Training</strong>
+            <span>Goal-based workout programs</span>
+          </div>
+          <div className="summary-item">
+            <strong>Progress</strong>
+            <span>Track meals, weight and habits</span>
+          </div>
         </div>
       </section>
 
       <section className="features">
-        <div className="feature-card">
-          <h3>🥗 AI Diet Plan</h3>
-          <p>100% personalized Indian diet plan.</p>
-        </div>
+        <article className="feature-card">
+          <span className="feature-number">01</span>
+          <h2>Personalized Nutrition</h2>
+          <p>Simple meal plans, calories, macros and suitable food alternatives.</p>
+        </article>
 
-        <div className="feature-card">
-          <h3>🏋️ Workout Plan</h3>
-          <p>Gym & Home workouts based on your goal.</p>
-        </div>
+        <article className="feature-card">
+          <span className="feature-number">02</span>
+          <h2>Workout Programs</h2>
+          <p>Gym and home workout plans structured around your experience and goal.</p>
+        </article>
 
-        <div className="feature-card">
-          <h3>📊 Progress Tracking</h3>
-          <p>Track calories, weight, water and workouts.</p>
-        </div>
-
-        <div className="feature-card">
-          <h3>👑 Lean Pro</h3>
-          <p>30-day dashboard with premium tracking features.</p>
-        </div>
+        <article className="feature-card">
+          <span className="feature-number">03</span>
+          <h2>Progress Tracking</h2>
+          <p>Track daily meals, water, weight and weekly progress in one place.</p>
+        </article>
       </section>
     </main>
   );

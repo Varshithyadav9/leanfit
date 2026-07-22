@@ -1,20 +1,47 @@
 import { useEffect, useState } from "react";
 
+const API_BASE_URL = "https://leanfit.onrender.com";
+
+function fileUrl(filePath = "") {
+  if (!filePath) return "";
+
+  const normalized = String(filePath).replace(/\\/g, "/");
+
+  return `${API_BASE_URL}/${normalized.replace(/^\/+/, "")}`;
+}
+
 function AdminDashboard({ setPage }) {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const fetchOrders = () => {
+  const fetchOrders = async () => {
     setLoading(true);
 
-    fetch("https://leanfit.onrender.com/api/orders")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setOrders(data.orders);
-      })
-      .finally(() => setLoading(false));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/orders`);
+      const data = await response.json();
+
+      if (data.success) {
+        setOrders(data.orders);
+
+        if (selectedOrder) {
+          const refreshed = data.orders.find(
+            (order) => order.orderId === selectedOrder.orderId
+          );
+          setSelectedOrder(refreshed || null);
+        }
+      } else {
+        setMessage(data.message || "Unable to load orders.");
+      }
+    } catch {
+      setMessage("Unable to connect to the server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -22,35 +49,58 @@ function AdminDashboard({ setPage }) {
   }, []);
 
   const updateStatus = async (orderId, status) => {
-    const res = await fetch(
-      `https://leanfit.onrender.com/api/orders/${orderId}/status`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+    setUpdating(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/orders/${orderId}/status`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to update the order.");
       }
-    );
 
-    const data = await res.json();
-
-    if (data.success) {
-      fetchOrders();
       setSelectedOrder(data.order);
+      setMessage(data.message || `Order marked ${status}.`);
+      await fetchOrders();
+    } catch (error) {
+      setMessage(error.message || "Unable to update the order.");
+    } finally {
+      setUpdating(false);
     }
   };
 
   const filteredOrders = orders.filter((order) => {
-    const text = `${order.orderId} ${order.name} ${order.mobile} ${order.selectedPlan}`.toLowerCase();
+    const text =
+      `${order.orderId} ${order.name} ${order.mobile} ${order.email} ${order.selectedPlan}`.toLowerCase();
+
     return text.includes(search.toLowerCase());
   });
 
-  const totalRevenue = orders.reduce(
+  const paidOrders = orders.filter(
+    (order) => order.paymentStatus === "Paid"
+  );
+
+  const totalRevenue = paidOrders.reduce(
     (sum, order) => sum + Number(order.selectedPrice || 0),
     0
   );
 
-  const pendingOrders = orders.filter((order) => order.status === "Pending");
-  const deliveredOrders = orders.filter((order) => order.status === "Delivered");
+  const pendingOrders = orders.filter(
+    (order) => order.status === "Pending"
+  );
+
+  const deliveredOrders = orders.filter(
+    (order) => order.status === "Delivered"
+  );
 
   return (
     <main className="admin-page">
@@ -58,13 +108,15 @@ function AdminDashboard({ setPage }) {
         <div>
           <p className="brand-label">LEANFIT ADMIN</p>
           <h2>Order Management</h2>
-          <p>Manage orders, payment verification and customer delivery.</p>
+          <p>Verify payments and deliver customer plans.</p>
         </div>
 
         <button className="secondary-btn" onClick={() => setPage("welcome")}>
           Back to Website
         </button>
       </section>
+
+      {message && <p className="muted">{message}</p>}
 
       <section className="admin-stats-grid">
         <div className="admin-stat-card">
@@ -73,7 +125,7 @@ function AdminDashboard({ setPage }) {
         </div>
 
         <div className="admin-stat-card">
-          <span>Pending</span>
+          <span>Pending Verification</span>
           <strong>{pendingOrders.length}</strong>
         </div>
 
@@ -83,7 +135,7 @@ function AdminDashboard({ setPage }) {
         </div>
 
         <div className="admin-stat-card">
-          <span>Revenue</span>
+          <span>Verified Revenue</span>
           <strong>₹{totalRevenue}</strong>
         </div>
       </section>
@@ -94,9 +146,9 @@ function AdminDashboard({ setPage }) {
 
           <input
             type="text"
-            placeholder="Search by name, mobile, order ID or plan"
+            placeholder="Search by name, mobile, email, order ID or plan"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
           />
 
           {loading ? (
@@ -112,7 +164,10 @@ function AdminDashboard({ setPage }) {
                     ? "admin-order-row active"
                     : "admin-order-row"
                 }
-                onClick={() => setSelectedOrder(order)}
+                onClick={() => {
+                  setSelectedOrder(order);
+                  setMessage("");
+                }}
               >
                 <div>
                   <strong>{order.name || "Customer"}</strong>
@@ -144,40 +199,79 @@ function AdminDashboard({ setPage }) {
                 <p><strong>Amount:</strong> ₹{selectedOrder.selectedPrice}</p>
                 <p><strong>Goal:</strong> {selectedOrder.goal}</p>
                 <p><strong>Status:</strong> {selectedOrder.status}</p>
-                <p><strong>Dashboard Access:</strong> {selectedOrder.dashboardAccess ? "Yes" : "No"}</p>
-                <p><strong>Membership:</strong> {selectedOrder.membershipStatus}</p>
+                <p><strong>Payment:</strong> {selectedOrder.paymentStatus}</p>
+                <p><strong>Method:</strong> {selectedOrder.paymentMethod}</p>
+                <p>
+                  <strong>Dashboard Access:</strong>{" "}
+                  {selectedOrder.dashboardAccess ? "Yes" : "No"}
+                </p>
+                <p>
+                  <strong>Membership:</strong>{" "}
+                  {selectedOrder.membershipStatus}
+                </p>
               </div>
 
               {selectedOrder.paymentScreenshot ? (
                 <div className="screenshot-box">
                   <h4>Payment Screenshot</h4>
-                  <img
-                    src={`https://leanfit.onrender.com${selectedOrder.paymentScreenshot}`}
-                    alt="Payment Screenshot"
-                  />
+                  <a
+                    href={fileUrl(selectedOrder.paymentScreenshot)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <img
+                      src={fileUrl(selectedOrder.paymentScreenshot)}
+                      alt="Payment Screenshot"
+                    />
+                  </a>
                 </div>
               ) : (
-                <div className="empty-state">No payment screenshot uploaded.</div>
+                <div className="empty-state">
+                  No payment screenshot uploaded.
+                </div>
               )}
 
               <div className="admin-actions">
-                <button
-                  className="primary-btn"
-                  onClick={() => updateStatus(selectedOrder.orderId, "Verified")}
-                >
-                  Mark Verified
-                </button>
+                {selectedOrder.status === "Pending" && (
+                  <>
+                    <button
+                      className="primary-btn"
+                      disabled={updating}
+                      onClick={() =>
+                        updateStatus(selectedOrder.orderId, "Verified")
+                      }
+                    >
+                      {updating ? "Processing..." : "Verify Payment"}
+                    </button>
 
-                <button
-                  className="secondary-btn"
-                  onClick={() => updateStatus(selectedOrder.orderId, "Delivered")}
-                >
-                  Mark Delivered
-                </button>
+                    <button
+                      className="secondary-btn"
+                      disabled={updating}
+                      onClick={() =>
+                        updateStatus(selectedOrder.orderId, "Rejected")
+                      }
+                    >
+                      Reject Payment
+                    </button>
+                  </>
+                )}
+
+                {selectedOrder.paymentStatus === "Paid" &&
+                  selectedOrder.status !== "Delivered" && (
+                    <button
+                      className="secondary-btn"
+                      disabled={updating}
+                      onClick={() =>
+                        updateStatus(selectedOrder.orderId, "Delivered")
+                      }
+                    >
+                      Mark Delivered
+                    </button>
+                  )}
 
                 {selectedOrder.pdfPath && (
                   <a
-                    href={`https://leanfit.onrender.com/${selectedOrder.pdfPath}`}
+                    href={fileUrl(selectedOrder.pdfPath)}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -185,13 +279,17 @@ function AdminDashboard({ setPage }) {
                   </a>
                 )}
 
-                <a
-                  href={`https://wa.me/91${selectedOrder.mobile}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <button className="primary-btn">Open WhatsApp</button>
-                </a>
+                {selectedOrder.mobile && (
+                  <a
+                    href={`https://wa.me/91${String(
+                      selectedOrder.mobile
+                    ).replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <button className="primary-btn">Open WhatsApp</button>
+                  </a>
+                )}
               </div>
             </>
           )}

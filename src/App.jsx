@@ -1,148 +1,73 @@
 import { useState } from "react";
-
+import "./App.css";
 import WelcomePage from "./components/WelcomePage";
 import LoginPage from "./components/LoginPage";
-import BasicProfile from "./components/BasicProfile";
-import GoalPage from "./components/GoalPage";
-import FoodPreferences from "./components/FoodPreferences";
-import HabitsPage from "./components/HabitsPage";
-import PlanPage from "./components/PlanPage";
-import PaymentPage from "./components/PaymentPage";
-import Dashboard from "./components/Dashboard";
-import SuccessPage from "./components/SuccessPage";
-import AdminLogin from "./components/AdminLogin";
-import AdminDashboard from "./components/AdminDashboard";
-import CustomerPortal from "./components/CustomerPortal";
-import CustomerAuth from "./components/CustomerAuth";
 
 function App() {
   const [page, setPage] = useState("welcome");
-  const [generatedPlan, setGeneratedPlan] = useState("");
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    mobile: "",
-    age: "",
-    gender: "",
-    height: "",
-    weight: "",
-    targetWeight: "",
-    activityLevel: "",
-    experience: "",
-    location: "",
-    goal: "",
-    foods: {},
-    smoking: "",
-    alcohol: "",
-    sleep: "",
-    stress: "",
-    workoutTime: "",
-    waterIntake: "",
-    selectedPlan: "",
-    selectedPrice: "",
+  const [customer, setCustomer] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("leanfitCustomer")) || null;
+    } catch {
+      return null;
+    }
   });
 
-  switch (page) {
-    case "welcome":
-      return <WelcomePage setPage={setPage} />;
+  const handleAuthenticated = (customerData, token) => {
+    localStorage.setItem("leanfitToken", token);
+    localStorage.setItem("leanfitCustomer", JSON.stringify(customerData));
+    setCustomer(customerData);
+    setPage("customerHome");
+  };
 
-    case "login":
-      return (
+  const handleLogout = () => {
+    localStorage.removeItem("leanfitToken");
+    localStorage.removeItem("leanfitCustomer");
+    setCustomer(null);
+    setPage("welcome");
+  };
+
+  return (
+    <>
+      {page === "welcome" && <WelcomePage setPage={setPage} />}
+
+      {page === "login" && (
         <LoginPage
-          formData={formData}
-          setFormData={setFormData}
+          initialMode="login"
           setPage={setPage}
+          onAuthenticated={handleAuthenticated}
         />
-      );
+      )}
 
-    case "profile":
-      return (
-        <BasicProfile
-          formData={formData}
-          setFormData={setFormData}
+      {page === "register" && (
+        <LoginPage
+          initialMode="register"
           setPage={setPage}
+          onAuthenticated={handleAuthenticated}
         />
-      );
+      )}
 
-    case "goal":
-      return (
-        <GoalPage
-          formData={formData}
-          setFormData={setFormData}
-          setPage={setPage}
-        />
-      );
-
-    case "food":
-      return (
-        <FoodPreferences
-          formData={formData}
-          setFormData={setFormData}
-          setPage={setPage}
-        />
-      );
-
-    case "habits":
-      return (
-        <HabitsPage
-          formData={formData}
-          setFormData={setFormData}
-          setPage={setPage}
-        />
-      );
-
-    case "plans":
-      return (
-        <PlanPage
-          formData={formData}
-          setFormData={setFormData}
-          setPage={setPage}
-        />
-      );
-
-    case "payment":
-      return (
-        <PaymentPage
-          formData={formData}
-          setPage={setPage}
-          setGeneratedPlan={setGeneratedPlan}
-        />
-      );
-
-    case "success":
-      return (
-        <SuccessPage
-          formData={formData}
-          generatedPlan={generatedPlan}
-          setPage={setPage}
-        />
-      );
-
-    case "dashboard":
-      return (
-        <Dashboard
-          formData={formData}
-          generatedPlan={generatedPlan}
-          setPage={setPage}
-        />
-      );
-
-    case "customer-auth":
-      return <CustomerAuth setPage={setPage} />;
-
-    case "customer-portal":
-      return <CustomerPortal setPage={setPage} />;
-
-    case "admin-login":
-      return <AdminLogin setPage={setPage} />;
-
-    case "admin":
-      return <AdminDashboard setPage={setPage} />;
-
-    default:
-      return <WelcomePage setPage={setPage} />;
-  }
+      {page === "customerHome" && (
+        <main className="page">
+          <section className="card customer-home-card">
+            <p className="brand-label">LEANFIT</p>
+            <h1>Welcome, {customer?.name || "Customer"}</h1>
+            <p className="muted">
+              Your account is ready. Your plan and Lean Pro access will appear here after payment verification.
+            </p>
+            <div className="customer-actions">
+              <button className="primary-btn" type="button" onClick={() => setPage("welcome")}>
+                Home
+              </button>
+              <button className="secondary-btn" type="button" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          </section>
+        </main>
+      )}
+    </>
+  );
 }
 
 export default App;

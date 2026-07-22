@@ -1,37 +1,14 @@
 function SuccessPage({ formData, setPage }) {
-  const whatsappNumber = "916302993318";
-
-  const whatsappMessage = `Hello Lean Varshith,
-
-I have completed the payment.
-
-Plan: ${formData.selectedPlan}
-Amount: ₹${formData.selectedPrice}
-
-My Details:
-Name: ${formData.name || "Not specified"}
-Mobile: ${formData.mobile || "Not specified"}
-Goal: ${formData.goal || "Not specified"}
-Current Weight: ${formData.weight || "Not specified"} kg
-Target Weight: ${formData.targetWeight || "Not specified"} kg
-
-I am attaching my payment screenshot.`;
-
-  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-    whatsappMessage
-  )}`;
-
   return (
     <main className="page">
       <section className="card">
-        <p className="brand-label">ORDER SUCCESSFUL</p>
+        <p className="brand-label">PAYMENT SUBMITTED</p>
 
-        <h2>Your Order Has Been Received</h2>
+        <h2>Your Payment Is Awaiting Verification</h2>
 
         <p className="muted">
-          Your details have been submitted successfully. After payment
-          verification, your personalized PDF plan will be prepared and shared
-          with you.
+          We received your payment screenshot. The LeanFit admin will verify it
+          before preparing your personalised plan.
         </p>
 
         <div className="selected-plan-box">
@@ -41,20 +18,27 @@ I am attaching my payment screenshot.`;
         </div>
 
         <div className="summary-box">
-          <h3>Next Step</h3>
+          <h3>What Happens Next?</h3>
           <p>
-            Send your payment screenshot on WhatsApp. Your personalized PDF plan
-            will be sent after verification.
+            After payment verification, your plan will be generated and sent to
+            your registered email. You can also check its status in the
+            Customer Portal.
           </p>
         </div>
 
-        <a href={whatsappLink} target="_blank" rel="noreferrer">
-          <button className="primary-btn full-btn">
-            Send Screenshot on WhatsApp
-          </button>
-        </a>
+        <button
+          className="primary-btn full-btn"
+          type="button"
+          onClick={() => setPage("customer-auth")}
+        >
+          Check Order Status
+        </button>
 
-        <button className="text-btn" onClick={() => setPage("welcome")}>
+        <button
+          className="text-btn"
+          type="button"
+          onClick={() => setPage("welcome")}
+        >
           Back to Home
         </button>
       </section>

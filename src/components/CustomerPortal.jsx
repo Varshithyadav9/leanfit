@@ -80,7 +80,7 @@ function CustomerPortal({ setPage }) {
                   {order.membershipStatus || "Not Applicable"}
                 </p>
 
-                {order.pdfPath && order.status === "Delivered" && (
+                {order.pdfPath && ["Verified", "Delivered"].includes(order.status) && (
                   <a
                     href={`https://leanfit.onrender.com/${order.pdfPath}`}
                     target="_blank"

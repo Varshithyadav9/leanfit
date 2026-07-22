@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "main": "server.js",
-  "engines": {
-    "node": ">=20 <21",
-    "npm": "10.x"
-  },
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js"
@@ -22,8 +18,12 @@
     "mongoose": "^9.7.3",
     "multer": "^2.2.0",
     "pdfkit": "^0.19.1",
-    "razorpay": "^2.9.8",
+    "razorpay": "2.9.8",
     "resend": "^6.16.0",
-    "sharp": "^0.34.5"
+    "sharp": "0.34.5"
+  },
+  "engines": {
+    "node": ">=20 <21",
+    "npm": "10.x"
   }
 }

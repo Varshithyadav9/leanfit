@@ -25,6 +25,10 @@ const orderSchema = new mongoose.Schema(
     paymentScreenshot: { type: String, default: "" },
     pdfPath: { type: String, default: "" },
     generatedPlan: { type: String, default: "" },
+
+    // Keeps the complete form information needed to generate the plan
+    // after the admin verifies a manual payment.
+    userData: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );
