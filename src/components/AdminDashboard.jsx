@@ -78,26 +78,6 @@ function AdminDashboard({ setPage }) {
     }
   };
 
-  const resendEmail = async (orderId) => {
-    setUpdating(true);
-    setMessage("");
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/resend-email`, {
-        method: "POST",
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.message || "Unable to send email.");
-      setSelectedOrder(data.order);
-      setMessage(data.message);
-      await fetchOrders();
-    } catch (error) {
-      setMessage(error.message || "Unable to send email.");
-    } finally {
-      setUpdating(false);
-    }
-  };
-
   const filteredOrders = orders.filter((order) => {
     const text =
       `${order.orderId} ${order.name} ${order.mobile} ${order.email} ${order.selectedPlan}`.toLowerCase();
@@ -221,10 +201,7 @@ function AdminDashboard({ setPage }) {
                 <p><strong>Status:</strong> {selectedOrder.status}</p>
                 <p><strong>Payment:</strong> {selectedOrder.paymentStatus}</p>
                 <p>
-                  <strong>Email:</strong>{" "}
-                  <span className={`email-status ${selectedOrder.emailStatus === "Sent" ? "sent" : selectedOrder.emailStatus === "Failed" ? "failed" : ""}`}>
-                    {selectedOrder.emailStatus || (selectedOrder.pdfSent ? "Sent" : "Not Sent")}
-                  </span>
+                  <strong>Delivery:</strong> WhatsApp / Manual
                 </p>
                 <p><strong>Method:</strong> {selectedOrder.paymentMethod}</p>
                 <p>
@@ -256,8 +233,6 @@ function AdminDashboard({ setPage }) {
                   No payment screenshot uploaded.
                 </div>
               )}
-
-              {selectedOrder.emailError && <p className="email-error"><strong>Email error:</strong> {selectedOrder.emailError}</p>}
 
               <div className="admin-actions">
                 {selectedOrder.status === "Pending" && (
@@ -297,19 +272,9 @@ function AdminDashboard({ setPage }) {
                     </button>
                   )}
 
-                {selectedOrder.paymentStatus === "Paid" && selectedOrder.pdfPath && (
-                  <button
-                    className="secondary-btn"
-                    disabled={updating}
-                    onClick={() => resendEmail(selectedOrder.orderId)}
-                  >
-                    {updating ? "Sending..." : selectedOrder.pdfSent ? "Resend PDF Email" : "Send PDF Email"}
-                  </button>
-                )}
-
                 {selectedOrder.pdfPath && (
                   <a
-                    href={fileUrl(selectedOrder.pdfPath)}
+                    href={`${API_BASE_URL}/api/orders/${selectedOrder.orderId}/pdf`}
                     target="_blank"
                     rel="noreferrer"
                   >
