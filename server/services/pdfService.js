@@ -536,7 +536,7 @@ function buildMealPlan(userData = {}) {
   ];
 
   return sanitizeMealPlan(meals, userData);
-}}
+}
 
 function measureMealCard(doc, meal) {
   const optionWidth = 470;
