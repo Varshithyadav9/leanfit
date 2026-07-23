@@ -1,0 +1,23 @@
+Replace these files in the same folders:
+
+server/services/pdfService.js
+server/services/emailService.js
+server/controllers/orderController.js
+server/models/Order.js
+server/routes/orderRoutes.js
+
+What this update fixes:
+- Admin approval now verifies payment and activates Lean Pro before PDF/email steps.
+- PDF and email failures are stored separately with clear status/error fields.
+- Admin can retry sending the PDF email.
+- Adds GET /api/orders/:orderId/pdf so verified customers can download/regenerate their PDF.
+- Corrects PDF footer overlap on pages 3 and 5.
+- Removes foods marked Avoid from meal cards and replacement tables.
+- Removes whey recommendations when Whey Protein is marked Avoid.
+- Uses a stable server-root path for generated PDF files.
+
+After replacing:
+1. Stop backend (Ctrl+C).
+2. Inside server run: npm install
+3. Start backend: npm run dev
+4. Test with a NEW customer order so all profile and food-preference data is present.

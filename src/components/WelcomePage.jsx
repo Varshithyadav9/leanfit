@@ -10,9 +10,7 @@ function WelcomePage({ setPage }) {
         <button
           className="admin-login-btn"
           type="button"
-          onClick={() => {
-            window.location.href = "/admin";
-          }}
+          onClick={() => setPage("admin-login")}
         >
           Admin Login
         </button>

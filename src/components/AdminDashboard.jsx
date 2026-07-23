@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_BASE_URL = "https://leanfit.onrender.com";
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
 
 function fileUrl(filePath = "") {
   if (!filePath) return "";
@@ -73,6 +73,26 @@ function AdminDashboard({ setPage }) {
       await fetchOrders();
     } catch (error) {
       setMessage(error.message || "Unable to update the order.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const resendEmail = async (orderId) => {
+    setUpdating(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/resend-email`, {
+        method: "POST",
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.message || "Unable to send email.");
+      setSelectedOrder(data.order);
+      setMessage(data.message);
+      await fetchOrders();
+    } catch (error) {
+      setMessage(error.message || "Unable to send email.");
     } finally {
       setUpdating(false);
     }
@@ -200,6 +220,12 @@ function AdminDashboard({ setPage }) {
                 <p><strong>Goal:</strong> {selectedOrder.goal}</p>
                 <p><strong>Status:</strong> {selectedOrder.status}</p>
                 <p><strong>Payment:</strong> {selectedOrder.paymentStatus}</p>
+                <p>
+                  <strong>Email:</strong>{" "}
+                  <span className={`email-status ${selectedOrder.emailStatus === "Sent" ? "sent" : selectedOrder.emailStatus === "Failed" ? "failed" : ""}`}>
+                    {selectedOrder.emailStatus || (selectedOrder.pdfSent ? "Sent" : "Not Sent")}
+                  </span>
+                </p>
                 <p><strong>Method:</strong> {selectedOrder.paymentMethod}</p>
                 <p>
                   <strong>Dashboard Access:</strong>{" "}
@@ -230,6 +256,8 @@ function AdminDashboard({ setPage }) {
                   No payment screenshot uploaded.
                 </div>
               )}
+
+              {selectedOrder.emailError && <p className="email-error"><strong>Email error:</strong> {selectedOrder.emailError}</p>}
 
               <div className="admin-actions">
                 {selectedOrder.status === "Pending" && (
@@ -268,6 +296,16 @@ function AdminDashboard({ setPage }) {
                       Mark Delivered
                     </button>
                   )}
+
+                {selectedOrder.paymentStatus === "Paid" && selectedOrder.pdfPath && (
+                  <button
+                    className="secondary-btn"
+                    disabled={updating}
+                    onClick={() => resendEmail(selectedOrder.orderId)}
+                  >
+                    {updating ? "Sending..." : selectedOrder.pdfSent ? "Resend PDF Email" : "Send PDF Email"}
+                  </button>
+                )}
 
                 {selectedOrder.pdfPath && (
                   <a

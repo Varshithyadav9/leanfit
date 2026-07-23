@@ -18,12 +18,27 @@ const orderSchema = new mongoose.Schema(
     razorpayPaymentId: { type: String, unique: true, sparse: true },
     razorpaySignature: { type: String, default: "" },
     pdfSent: { type: Boolean, default: false },
+    emailStatus: {
+      type: String,
+      enum: ["Not Sent", "Sending", "Sent", "Failed"],
+      default: "Not Sent",
+    },
+    emailError: { type: String, default: "" },
+    emailSentAt: Date,
+    emailProviderId: { type: String, default: "" },
     dashboardAccess: { type: Boolean, default: false },
     accessStartDate: Date,
     accessEndDate: Date,
     membershipStatus: { type: String, default: "Not Applicable" },
     paymentScreenshot: { type: String, default: "" },
     pdfPath: { type: String, default: "" },
+    pdfStatus: {
+      type: String,
+      enum: ["Not Generated", "Generating", "Generated", "Failed"],
+      default: "Not Generated",
+    },
+    pdfError: { type: String, default: "" },
+    pdfGeneratedAt: Date,
     generatedPlan: { type: String, default: "" },
 
     // Keeps the complete form information needed to generate the plan

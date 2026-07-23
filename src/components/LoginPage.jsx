@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PasswordInput from "./PasswordInput";
 
 const API_URL = (
   import.meta.env.VITE_API_URL || "https://leanfit.onrender.com"
@@ -48,6 +49,7 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           identifier: form.identifier.trim(),
+          email: form.identifier.trim().toLowerCase(),
           password: form.password,
         }),
       });
@@ -240,10 +242,9 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
 
             <div>
               <label htmlFor="password">Password</label>
-              <input
+              <PasswordInput
                 id="password"
                 name="password"
-                type="password"
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 placeholder="Enter your password"
                 value={form.password}
@@ -254,10 +255,9 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
             {mode === "register" && (
               <div>
                 <label htmlFor="confirmPassword">Confirm Password</label>
-                <input
+                <PasswordInput
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
                   autoComplete="new-password"
                   placeholder="Enter password again"
                   value={form.confirmPassword}

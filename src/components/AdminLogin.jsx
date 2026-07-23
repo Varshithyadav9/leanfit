@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PasswordInput from "./PasswordInput";
 
 function AdminLogin({ setPage }) {
   const [email, setEmail] = useState("");
@@ -9,7 +10,8 @@ function AdminLogin({ setPage }) {
     const adminEmail = "admin@leanfit.in";
     const adminPassword = "LeanFit@2026";
 
-    if (email === adminEmail && password === adminPassword) {
+    if (email.trim().toLowerCase() === adminEmail && password === adminPassword) {
+      setError("");
       setPage("admin");
     } else {
       setError("Invalid email or password.");
@@ -20,58 +22,41 @@ function AdminLogin({ setPage }) {
     <main className="page">
       <section className="card admin-login-card">
         <p className="brand-label">LEANFIT ADMIN</p>
-
         <h2>Administrator Login</h2>
+        <p className="muted">Login to manage customer orders, payments and memberships.</p>
 
-        <p className="muted">
-          Login to manage customer orders, payments and memberships.
-        </p>
+        <div className="form-grid" onKeyDown={(event) => event.key === "Enter" && handleLogin()}>
+          <div>
+            <label htmlFor="adminEmail">Email</label>
+            <input
+              id="adminEmail"
+              type="email"
+              autoComplete="username"
+              placeholder="admin@leanfit.in"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </div>
 
-        <div className="form-group">
-          <label>Email</label>
-
-          <input
-            type="email"
-            placeholder="admin@leanfit.in"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <div>
+            <label htmlFor="adminPassword">Password</label>
+            <PasswordInput
+              id="adminPassword"
+              name="adminPassword"
+              autoComplete="current-password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="form-group">
-          <label>Password</label>
+        {error && <p className="form-message">{error}</p>}
 
-          <input
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-
-        {error && (
-          <p
-            style={{
-              color: "#dc2626",
-              marginTop: "12px",
-              fontWeight: "700",
-            }}
-          >
-            {error}
-          </p>
-        )}
-
-        <button className="primary-btn full-btn" onClick={handleLogin}>
+        <button className="primary-btn full-btn" type="button" onClick={handleLogin}>
           Login
         </button>
-
-        <button
-          className="text-btn"
-          style={{ marginTop: "15px" }}
-          onClick={() => setPage("welcome")}
-        >
-          Back
-        </button>
+        <button className="text-btn full-btn" type="button" onClick={() => setPage("welcome")}>Back</button>
       </section>
     </main>
   );

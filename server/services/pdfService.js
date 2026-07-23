@@ -41,6 +41,77 @@ function cleanLine(value = "") {
     .trim();
 }
 
+const SAFE_MEAL_FALLBACKS = [
+  "Dal 250 g cooked + rice 180 g cooked + mixed vegetables",
+  "Soya chunks 70 g dry + 2 rotis + salad",
+  "Black chana 180 g cooked + rice 150 g cooked",
+  "Rajma 180 g cooked + 2 rotis + vegetables",
+  "Oats 70 g + milk 250 ml + banana",
+  "Roasted chana 50 g + fruit + buttermilk",
+];
+
+function getAvoidedFoods(userData = {}) {
+  const foods = userData.foods && typeof userData.foods === "object"
+    ? userData.foods
+    : {};
+
+  return Object.entries(foods)
+    .filter(([, preference]) =>
+      String(preference || "").toLowerCase().includes("avoid")
+    )
+    .map(([food]) => String(food).toLowerCase().trim())
+    .filter(Boolean);
+}
+
+function optionContainsAvoidedFood(option, avoidedFoods = []) {
+  const text = String(option || "").toLowerCase();
+
+  return avoidedFoods.some((food) => {
+    const aliases = [food];
+
+    if (food === "soy") aliases.push("soya");
+    if (food === "whey protein") aliases.push("whey");
+    if (food === "roti") aliases.push("chapati", "chapatis");
+    if (food === "eggs") aliases.push("egg");
+    if (food === "milk") aliases.push("dairy milk");
+
+    return aliases.some((alias) => text.includes(alias));
+  });
+}
+
+function sanitizeOptions(options = [], avoidedFoods = []) {
+  const allowed = options.filter(
+    (option) => !optionContainsAvoidedFood(option, avoidedFoods)
+  );
+
+  for (const fallback of SAFE_MEAL_FALLBACKS) {
+    if (allowed.length >= 3) break;
+    if (
+      !optionContainsAvoidedFood(fallback, avoidedFoods) &&
+      !allowed.includes(fallback)
+    ) {
+      allowed.push(fallback);
+    }
+  }
+
+  while (allowed.length < 3) {
+    allowed.push("Choose a similar preferred food with the same portion size");
+  }
+
+  return allowed.slice(0, 3);
+}
+
+function sanitizeMealPlan(meals = [], userData = {}) {
+  const avoidedFoods = getAvoidedFoods(userData);
+
+  if (!avoidedFoods.length) return meals;
+
+  return meals.map((meal) => ({
+    ...meal,
+    options: sanitizeOptions(meal.options, avoidedFoods),
+  }));
+}
+
 function normalizeGoal(goal = "") {
   const value = String(goal).toLowerCase();
 
@@ -123,8 +194,8 @@ function addHeader(doc, title, orderId) {
 
 function addFooter(doc, page, total) {
   doc
-    .moveTo(PAGE.left, 760)
-    .lineTo(PAGE.right, 760)
+    .moveTo(PAGE.left, 812)
+    .lineTo(PAGE.right, 812)
     .strokeColor(COLORS.border)
     .stroke();
 
@@ -132,9 +203,9 @@ function addFooter(doc, page, total) {
     .font("Helvetica")
     .fontSize(8)
     .fillColor(COLORS.muted)
-    .text("@lean_varshith", PAGE.left, 770);
+    .text("@lean_varshith", PAGE.left, 820);
 
-  doc.text(`Page ${page} of ${total}`, 430, 770, {
+  doc.text(`Page ${page} of ${total}`, 430, 820, {
     width: 125,
     align: "right",
   });
@@ -368,7 +439,7 @@ function buildMealPlan(userData = {}) {
     ],
   };
 
-  return [
+  const meals = [
     {
       title: "Breakfast",
       time: "7:00–9:00 AM",
@@ -463,7 +534,9 @@ function buildMealPlan(userData = {}) {
       tip: "Keep the meal balanced and finish it 1–2 hours before sleep.",
     },
   ];
-}
+
+  return sanitizeMealPlan(meals, userData);
+}}
 
 function measureMealCard(doc, meal) {
   const optionWidth = 470;
@@ -787,7 +860,7 @@ function drawWorkoutNutritionPage(doc, orderId, mealPlan, page, total) {
   addFooter(doc, page, total);
 }
 
-function drawFoodGuidePage(doc, planText, orderId, page, total) {
+function drawFoodGuidePage(doc, userData, planText, orderId, page, total) {
   addHeader(doc, "Food Alternatives & Practical Notes", orderId);
 
   const proteinFallback = [
@@ -811,18 +884,27 @@ function drawFoodGuidePage(doc, planText, orderId, page, total) {
     { food: "Idli", qty: "3 pieces" },
   ];
 
+  const avoidedFoods = getAvoidedFoods(userData);
+
   const proteinRows = normalizeAlternativeRows(
     proteinAlternatives,
     proteinFallback
-  );
-  const carbRows = normalizeAlternativeRows(carbAlternatives, carbFallback);
+  ).filter((row) => !optionContainsAvoidedFood(row.food, avoidedFoods));
+
+  const carbRows = normalizeAlternativeRows(
+    carbAlternatives,
+    carbFallback
+  ).filter((row) => !optionContainsAvoidedFood(row.food, avoidedFoods));
 
   const vegetableList = toOptions(vegetables).slice(0, 10);
   const fruitList = toOptions(fruits).slice(0, 10);
 
-  const supplementUse =
-    extractSection(planText, "SUPPLEMENT USE") ||
-    "Supplements are optional. A consistent diet made from normal foods is enough for most users.";
+  const wheyAvoided = avoidedFoods.includes("whey protein");
+
+  const supplementUse = wheyAvoided
+    ? "Whey protein has been excluded because it was marked Avoid. Supplements are optional; use preferred whole-food protein sources instead."
+    : extractSection(planText, "SUPPLEMENT USE") ||
+      "Supplements are optional. A consistent diet made from normal foods is enough for most users.";
 
   const lifestyleTips =
     extractSection(planText, "HABIT & LIFESTYLE TIPS") ||
@@ -1249,7 +1331,7 @@ export function createPlanPDF(userData = {}, planText = "", orderId = "") {
         drawWorkoutNutritionPage(doc, orderId, mealPlan, 2, total);
 
         doc.addPage();
-        drawFoodGuidePage(doc, planText, orderId, 3, total);
+        drawFoodGuidePage(doc, userData, planText, orderId, 3, total);
       } else if (workoutOnly) {
         const total = 2;
 
@@ -1274,7 +1356,7 @@ export function createPlanPDF(userData = {}, planText = "", orderId = "") {
         drawWorkoutNutritionPage(doc, orderId, mealPlan, 2, total);
 
         doc.addPage();
-        drawFoodGuidePage(doc, planText, orderId, 3, total);
+        drawFoodGuidePage(doc, userData, planText, orderId, 3, total);
 
         doc.addPage();
         drawWorkoutPage(doc, userData, planText, orderId, 4, total);

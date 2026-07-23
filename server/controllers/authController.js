@@ -6,15 +6,19 @@ import Customer from "../models/Customer.js";
 export const registerCustomer = async (req, res) => {
   try {
     const { name, email, mobile, password } = req.body;
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const normalizedMobile = String(mobile || "").replace(/\D/g, "");
 
-    if (!name || !email || !mobile || !password) {
+    if (!name || !normalizedEmail || !normalizedMobile || !password) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
       });
     }
 
-    const existingCustomer = await Customer.findOne({ email });
+    const existingCustomer = await Customer.findOne({
+      $or: [{ email: normalizedEmail }, { mobile: normalizedMobile }],
+    });
 
     if (existingCustomer) {
       return res.status(400).json({
@@ -27,8 +31,8 @@ export const registerCustomer = async (req, res) => {
 
     const customer = await Customer.create({
       name,
-      email,
-      mobile,
+      email: normalizedEmail,
+      mobile: normalizedMobile,
       password: hashedPassword,
     });
 
@@ -58,9 +62,24 @@ export const registerCustomer = async (req, res) => {
 
 export const loginCustomer = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, email, password } = req.body;
+    const loginValue = String(identifier || email || "").trim();
+    const normalizedEmail = loginValue.toLowerCase();
+    const normalizedMobile = loginValue.replace(/\D/g, "");
 
-    const customer = await Customer.findOne({ email });
+    if (!loginValue || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email/mobile number and password are required",
+      });
+    }
+
+    const customer = await Customer.findOne({
+      $or: [
+        { email: normalizedEmail },
+        ...(normalizedMobile ? [{ mobile: normalizedMobile }] : []),
+      ],
+    });
 
     if (!customer) {
       return res.status(400).json({

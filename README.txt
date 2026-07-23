@@ -1,11 +1,17 @@
-LeanFit Voice Meal Logging
+LEANFIT ADMIN + LEAN PRO DASHBOARD REDESIGN
 
 Replace these files:
-1. frontend/src/components/Dashboard.jsx
-2. server/services/geminiService.js
-3. server/routes/foodRoutes.js
+1. src/App.css
+2. src/components/AdminDashboard.jsx
+3. src/components/Dashboard.jsx
+4. src/components/ProgressCharts.jsx
 
-Then push both frontend and backend changes.
+This update is frontend-only. Do not replace server files.
 
-The voice feature uses browser SpeechRecognition when available.
-Users can also type the spoken meal description manually.
+After replacement:
+1. Stop the frontend terminal with Ctrl+C.
+2. Run: npm run dev
+3. Hard refresh Chrome with Ctrl+Shift+R.
+4. Check Admin Dashboard and Lean Pro Dashboard.
+
+The update keeps the existing API and dashboard functionality. It adds the missing styles for both dashboard screens and responsive mobile layouts.

@@ -114,6 +114,8 @@ export const submitManualPayment = async (req, res) => {
       paymentMethod: "Manual UPI",
       paymentScreenshot,
       pdfSent: false,
+      emailStatus: "Not Sent",
+      emailError: "",
       dashboardAccess: false,
       accessStartDate: null,
       accessEndDate: null,
