@@ -32,10 +32,10 @@ function resolveStoredPdfPath(pdfPath = "") {
   return path.resolve(SERVER_ROOT, pdfPath);
 }
 
-async function getOrCreatePdf(order, userData) {
+async function getOrCreatePdf(order, userData, forceRegenerate = false) {
   let pdfBuffer;
 
-  if (order.pdfPath) {
+  if (!forceRegenerate && order.pdfPath) {
     const existingPath = resolveStoredPdfPath(order.pdfPath);
     if (fs.existsSync(existingPath)) {
       pdfBuffer = fs.readFileSync(existingPath);
@@ -346,7 +346,15 @@ export const downloadOrderPdf = async (req, res) => {
     }
 
     const userData = buildUserData(order);
-    const pdfBuffer = await getOrCreatePdf(order, userData);
+    const forceRegenerate =
+      String(req.query.regenerate || "").toLowerCase() === "1" ||
+      String(req.query.regenerate || "").toLowerCase() === "true";
+
+    const pdfBuffer = await getOrCreatePdf(
+      order,
+      userData,
+      forceRegenerate
+    );
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
