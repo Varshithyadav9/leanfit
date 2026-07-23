@@ -193,9 +193,14 @@ function addHeader(doc, title, orderId) {
 }
 
 function addFooter(doc, page, total) {
+  const footerLineY = 770;
+  const footerTextY = 779;
+
+  doc.save();
+
   doc
-    .moveTo(PAGE.left, 812)
-    .lineTo(PAGE.right, 812)
+    .moveTo(PAGE.left, footerLineY)
+    .lineTo(PAGE.right, footerLineY)
     .strokeColor(COLORS.border)
     .stroke();
 
@@ -203,12 +208,18 @@ function addFooter(doc, page, total) {
     .font("Helvetica")
     .fontSize(8)
     .fillColor(COLORS.muted)
-    .text("@lean_varshith", PAGE.left, 820);
+    .text("@lean_varshith", PAGE.left, footerTextY, {
+      width: 180,
+      lineBreak: false,
+    });
 
-  doc.text(`Page ${page} of ${total}`, 430, 820, {
+  doc.text(`Page ${page} of ${total}`, 430, footerTextY, {
     width: 125,
     align: "right",
+    lineBreak: false,
   });
+
+  doc.restore();
 }
 
 function sectionTitle(doc, text, y) {
@@ -899,7 +910,7 @@ function drawFoodGuidePage(doc, userData, planText, orderId, page, total) {
   const vegetableList = toOptions(vegetables).slice(0, 10);
   const fruitList = toOptions(fruits).slice(0, 10);
 
-  const wheyAvoided = avoidedFoods.includes("whey protein");
+  const wheyAvoided = avoidedFoods.some((food) => food.includes("whey"));
 
   const supplementUse = wheyAvoided
     ? "Whey protein has been excluded because it was marked Avoid. Supplements are optional; use preferred whole-food protein sources instead."
@@ -1376,4 +1387,3 @@ export function createPlanPDF(userData = {}, planText = "", orderId = "") {
 export function createPlanPDFV2(userData = {}, orderId = "") {
   return createPlanPDF(userData, "", orderId);
 }
-
