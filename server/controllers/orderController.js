@@ -346,16 +346,14 @@ export const downloadOrderPdf = async (req, res) => {
     }
 
     const userData = buildUserData(order);
-    const forceRegenerate =
-      String(req.query.regenerate || "").toLowerCase() === "1" ||
-      String(req.query.regenerate || "").toLowerCase() === "true";
 
-    const pdfBuffer = await getOrCreatePdf(
-      order,
-      userData,
-      forceRegenerate
-    );
+    // Always create a fresh PDF for downloads so old Render files
+    // and browser-cached PDFs are never reused.
+    const pdfBuffer = await getOrCreatePdf(order, userData, true);
 
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",

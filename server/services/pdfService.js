@@ -193,14 +193,14 @@ function addHeader(doc, title, orderId) {
 }
 
 function addFooter(doc, page, total) {
-  const footerLineY = 770;
-  const footerTextY = 779;
+  const originalBottomMargin = doc.page.margins.bottom;
+  doc.page.margins.bottom = 0;
 
   doc.save();
 
   doc
-    .moveTo(PAGE.left, footerLineY)
-    .lineTo(PAGE.right, footerLineY)
+    .moveTo(PAGE.left, 790)
+    .lineTo(PAGE.right, 790)
     .strokeColor(COLORS.border)
     .stroke();
 
@@ -208,18 +208,21 @@ function addFooter(doc, page, total) {
     .font("Helvetica")
     .fontSize(8)
     .fillColor(COLORS.muted)
-    .text("@lean_varshith", PAGE.left, footerTextY, {
+    .text("@lean_varshith", PAGE.left, 799, {
       width: 180,
+      height: 12,
       lineBreak: false,
     });
 
-  doc.text(`Page ${page} of ${total}`, 430, footerTextY, {
+  doc.text(`Page ${page} of ${total}`, 430, 799, {
     width: 125,
+    height: 12,
     align: "right",
     lineBreak: false,
   });
 
   doc.restore();
+  doc.page.margins.bottom = originalBottomMargin;
 }
 
 function sectionTitle(doc, text, y) {
