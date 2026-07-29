@@ -141,7 +141,18 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
     <main className="auth-page">
       <section className="auth-shell">
         <aside className="auth-side">
-          <p className="brand-label">LEANFIT BY VARSHITH</p>
+          <img
+            src="/leanfit-logo.png"
+            alt="LeanFit"
+            style={{
+              width: "230px",
+              maxWidth: "82%",
+              height: "auto",
+              display: "block",
+              marginBottom: "22px",
+            }}
+          />
+          <p className="brand-label">BY VARSHITH</p>
           <h1>{mode === "login" ? "Welcome back." : "Start your LeanFit journey."}</h1>
           <p>
             {mode === "login"

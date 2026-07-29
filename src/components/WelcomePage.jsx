@@ -3,7 +3,16 @@ function WelcomePage({ setPage }) {
     <main className="welcome-page">
       <header className="topbar">
         <div>
-          <p className="topbar-brand">LEANFIT</p>
+          <img
+            src="/leanfit-logo.png"
+            alt="LeanFit"
+            style={{
+              width: "170px",
+              maxWidth: "42vw",
+              height: "auto",
+              display: "block",
+            }}
+          />
           <p className="topbar-subtitle">By Varshith</p>
         </div>
 

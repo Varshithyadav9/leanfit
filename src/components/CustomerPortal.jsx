@@ -49,7 +49,18 @@ function CustomerPortal({ setPage }) {
   return (
     <main className="page">
       <section className="card">
-        <p className="brand-label">LEANFIT CUSTOMER PORTAL</p>
+        <img
+          src="/leanfit-logo.png"
+          alt="LeanFit"
+          style={{
+            width: "190px",
+            maxWidth: "70%",
+            height: "auto",
+            display: "block",
+            margin: "0 auto 18px",
+          }}
+        />
+        <p className="brand-label">CUSTOMER PORTAL</p>
 
         <h2>Welcome, {customer?.name || "Customer"}</h2>
 
