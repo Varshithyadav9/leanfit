@@ -19,8 +19,8 @@ const steps = [
 const plans = [
   { name: "Diet Plan", price: 199, text: "Calories, macros, Indian meals and suitable food alternatives." },
   { name: "Workout Plan", price: 199, text: "Workout split, exercises, sets, reps, cardio and progression." },
-  { name: "Diet + Workout", price: 349, text: "A complete personalized diet and workout plan in PDF format.", popular: true },
-  { name: "Lean Pro", price: 449, text: "Diet, workout, progress dashboard, monthly updates and support." },
+  { name: "Diet + Workout", price: 349, text: "A complete personalized diet and workout plan in PDF format.", },
+  { name: "Lean Pro", price: 449, text: "Diet, workout, progress dashboard, monthly updates and support.", popular: true },
 ];
 
 const faqs = [
