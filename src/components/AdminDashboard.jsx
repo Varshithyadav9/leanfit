@@ -10,6 +10,24 @@ function fileUrl(filePath = "") {
   return `${API_BASE_URL}/${normalized.replace(/^\/+/, "")}`;
 }
 
+function getWhatsAppNumber(mobile = "") {
+  let digits = String(mobile).replace(/\D/g, "");
+
+  if (digits.startsWith("0") && digits.length === 11) {
+    digits = digits.slice(1);
+  }
+
+  if (digits.length === 10) {
+    return `91${digits}`;
+  }
+
+  if (digits.startsWith("91") && digits.length === 12) {
+    return digits;
+  }
+
+  return "";
+}
+
 function AdminDashboard({ setPage }) {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -200,9 +218,7 @@ function AdminDashboard({ setPage }) {
                 <p><strong>Goal:</strong> {selectedOrder.goal}</p>
                 <p><strong>Status:</strong> {selectedOrder.status}</p>
                 <p><strong>Payment:</strong> {selectedOrder.paymentStatus}</p>
-                <p>
-                  <strong>Delivery:</strong> WhatsApp / Manual
-                </p>
+                <p><strong>Delivery:</strong> WhatsApp / Manual</p>
                 <p><strong>Method:</strong> {selectedOrder.paymentMethod}</p>
                 <p>
                   <strong>Dashboard Access:</strong>{" "}
@@ -233,8 +249,7 @@ function AdminDashboard({ setPage }) {
                   No payment screenshot uploaded.
                 </div>
               )}
-
-              <div className="admin-actions">
+<div className="admin-actions">
                 {selectedOrder.status === "Pending" && (
                   <>
                     <button
@@ -271,8 +286,7 @@ function AdminDashboard({ setPage }) {
                       Mark Delivered
                     </button>
                   )}
-
-                {selectedOrder.pdfPath && (
+{selectedOrder.pdfPath && (
                   <a
                     href={`${API_BASE_URL}/api/orders/${selectedOrder.orderId}/pdf`}
                     target="_blank"
@@ -282,17 +296,19 @@ function AdminDashboard({ setPage }) {
                   </a>
                 )}
 
-                {selectedOrder.mobile && (
+                {getWhatsAppNumber(selectedOrder.mobile) ? (
                   <a
-                    href={`https://wa.me/91${String(
-                      selectedOrder.mobile
-                    ).replace(/\D/g, "")}`}
+                    href={`https://wa.me/${getWhatsAppNumber(selectedOrder.mobile)}`}
                     target="_blank"
                     rel="noreferrer"
                   >
                     <button className="primary-btn">Open WhatsApp</button>
                   </a>
-                )}
+                ) : selectedOrder.mobile ? (
+                  <span className="email-error">
+                    Invalid mobile number. Enter a valid 10-digit Indian number.
+                  </span>
+                ) : null}
               </div>
             </>
           )}

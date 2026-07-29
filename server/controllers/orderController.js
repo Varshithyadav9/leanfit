@@ -143,23 +143,23 @@ async function prepareVerifiedOrder(order) {
   await activateVerifiedOrder(order);
 
   const userData = buildUserData(order);
-  let pdfBuffer;
 
   try {
-    pdfBuffer = await getOrCreatePdf(order, userData);
+    await getOrCreatePdf(order, userData);
+
+    order.pdfSent = false;
+    order.emailStatus = "Manual";
+    order.emailError = "";
+    await order.save();
+
+    return { generated: true, manualDelivery: true };
   } catch (error) {
     return {
-      sent: false,
+      generated: false,
       stage: "pdf",
       error: error.message || "PDF generation failed.",
     };
   }
-
-  if (order.pdfSent && order.emailStatus === "Sent") {
-    return { sent: true, alreadySent: true };
-  }
-
-  return emailOrderPdf(order, userData, pdfBuffer);
 }
 
 export const getOrders = async (req, res) => {
@@ -253,18 +253,13 @@ export const updateOrderStatus = async (req, res) => {
     let message = `Order marked ${status}.`;
 
     if (status === "Verified") {
-      if (workflowResult?.sent) {
-        message = workflowResult.alreadySent
-          ? "Payment verified. The PDF was already generated and emailed."
-          : "Payment verified, PDF generated and email sent to the customer.";
-      } else if (workflowResult?.stage === "pdf") {
+      if (workflowResult?.generated) {
         message =
-          `Payment verified and membership activated, but PDF generation failed: ` +
-          workflowResult.error;
+          "Payment verified and PDF generated. Download it and send it through WhatsApp.";
       } else {
         message =
-          `Payment verified, PDF generated and membership activated, but email failed: ` +
-          (workflowResult?.error || "Unknown email error");
+          `Payment verified, but PDF generation failed: ` +
+          (workflowResult?.error || "Unknown PDF error");
       }
     }
 
