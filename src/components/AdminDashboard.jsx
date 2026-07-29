@@ -33,6 +33,8 @@ function AdminDashboard({ setPage }) {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState("");
@@ -97,12 +99,52 @@ function AdminDashboard({ setPage }) {
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const text =
-      `${order.orderId} ${order.name} ${order.mobile} ${order.email} ${order.selectedPlan}`.toLowerCase();
+  const filteredOrders = orders
+    .filter((order) => {
+      const text = `${order.orderId} ${order.name} ${order.mobile} ${order.email} ${order.selectedPlan}`.toLowerCase();
+      const matchesSearch = text.includes(search.trim().toLowerCase());
+      const matchesStatus = statusFilter === "All" || order.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      const aTime = new Date(a.createdAt || 0).getTime();
+      const bTime = new Date(b.createdAt || 0).getTime();
+      return sortOrder === "oldest" ? aTime - bTime : bTime - aTime;
+    });
 
-    return text.includes(search.toLowerCase());
-  });
+  const exportOrders = () => {
+    if (filteredOrders.length === 0) {
+      setMessage("No orders available to export.");
+      return;
+    }
+
+    const columns = [
+      "Order ID", "Name", "Email", "Mobile", "Plan", "Amount",
+      "Status", "Payment Status", "Created At"
+    ];
+
+    const escapeCsv = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const rows = filteredOrders.map((order) => [
+      order.orderId, order.name, order.email, order.mobile, order.selectedPlan,
+      order.selectedPrice, order.status, order.paymentStatus,
+      order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN") : ""
+    ]);
+
+    const csv = [columns, ...rows]
+      .map((row) => row.map(escapeCsv).join(","))
+      .join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `leanfit-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setMessage(`${filteredOrders.length} order(s) exported successfully.`);
+  };
 
   const paidOrders = orders.filter(
     (order) => order.paymentStatus === "Paid"
@@ -166,12 +208,35 @@ function AdminDashboard({ setPage }) {
         <div className="admin-card">
           <h3>Orders</h3>
 
-          <input
-            type="text"
-            placeholder="Search by name, mobile, email, order ID or plan"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
+          <div className="admin-order-tools">
+            <input
+              type="text"
+              placeholder="Search name, mobile, email, order ID or plan"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+
+            <div className="admin-filter-row">
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                <option value="All">All statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Verified">Verified</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+
+              <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+              </select>
+            </div>
+
+            <button className="secondary-btn admin-export-btn" type="button" onClick={exportOrders}>
+              Export Visible Orders
+            </button>
+          </div>
+
+          <p className="admin-result-count">Showing {filteredOrders.length} of {orders.length} orders</p>
 
           {loading ? (
             <p>Loading orders...</p>
