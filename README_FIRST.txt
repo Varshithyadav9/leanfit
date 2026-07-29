@@ -1,16 +1,24 @@
-LEANFIT PRICING + CONTACT FIX
+LEANFIT MOBILE-FIRST POLISH
 
-Replace these files in your project:
+Only 2 existing project files need replacement:
 1. src/components/WelcomePage.jsx
-2. src/components/InfoPage.jsx
-3. src/App.css
+2. src/App.css
 
-Changes:
-- Removed the ₹349 plan from landing-page pricing.
-- Added ₹449 Lean Pro as the BEST VALUE plan.
-- WhatsApp opens +91 6302993318.
-- Email opens varshithyadav009@gmail.com.
-- Instagram opens @lean_varshith.
-- Contact cards are clickable.
+Changes include:
+- Compact mobile-first welcome page
+- Better phone spacing and typography
+- Sticky/clean navigation
+- Larger tap-friendly buttons
+- Responsive 2-column phone cards where useful
+- Benefit icons
+- Clear Lean Pro feature list
+- Lean Pro shown first on mobile
+- Improved footer and FAQ spacing
+- No backend, login, payment, dashboard, or routing files changed
 
-After replacing, run npm run dev and test.
+After replacing:
+npm run dev
+
+git add .
+git commit -m "Polish LeanFit mobile landing page"
+git push
