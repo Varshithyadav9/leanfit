@@ -30,9 +30,9 @@ const pages = {
     title: "Contact LeanFit",
     updated: "We usually respond within one business day.",
     sections: [
-      ["WhatsApp", "Use the WhatsApp contact shared during your order process for payment verification, plan delivery and account support."],
-      ["Email", "Add your official LeanFit support email here after creating it. Until then, use WhatsApp as the primary support channel."],
-      ["Instagram", "You can also contact LeanFit through your official social profile. Never share passwords, OTPs, UPI PINs or banking credentials."],
+      ["WhatsApp", "+91 6302993318 — Contact us for payment verification, plan delivery and account support."],
+      ["Email", "varshithyadav009@gmail.com"],
+      ["Instagram", "@lean_varshith — You can message us through Instagram for general enquiries. Never share passwords, OTPs, UPI PINs or banking credentials."],
       ["Before contacting us", "Keep your order ID, registered email address and mobile number ready so we can locate your order quickly."],
     ],
   },

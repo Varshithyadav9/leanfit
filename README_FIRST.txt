@@ -1,20 +1,22 @@
-LEANFIT LOGO UPDATE
+LEANFIT PRICING + CONTACT FIX
 
-Copy these files into your project:
+Replace these files in your project:
+- src/components/WelcomePage.jsx
+- src/components/InfoPage.jsx
+- src/App.css
 
-1. public/leanfit-logo.png
-2. src/components/WelcomePage.jsx
-3. src/components/LoginPage.jsx
-4. src/components/CustomerPortal.jsx
-
-Replace the existing files when Windows asks.
+Changes:
+- Added Lean Pro Membership ₹449
+- Marked Lean Pro as BEST PLAN
+- Kept Diet + Workout ₹349 as BEST VALUE
+- Added WhatsApp: +91 6302993318
+- Added Email: varshithyadav009@gmail.com
+- Added Instagram: @lean_varshith
 
 Then run:
-git add .
-git commit -m "Add LeanFit logo to website"
-git push
+npm run dev
 
-The logo was added to:
-- Welcome page header
-- Customer login/register page
-- Customer Portal
+After checking:
+git add .
+git commit -m "Fix pricing and contact details"
+git push
