@@ -1,27 +1,78 @@
-const benefits=[
-  ["🥗","Personalized Indian meal plans"],
-  ["🏋️","Goal-based gym and home workouts"],
-  ["📊","Calories and macro guidance"],
-  ["💧","Daily water and meal tracking"],
-  ["📈","Weight and progress charts"],
-  ["🍛","Practical food alternatives"],
-];
-const faqs=[
-["Is LeanFit suitable for beginners?","Yes. Your workout structure is based on your selected experience level and goal."],
-["Can I choose vegetarian foods?","Yes. Food preferences are collected before your plan is prepared."],
-["Do I need a gym?","No. LeanFit can support both gym and home-based workout planning."],
-["How will I receive my plan?","After payment verification, you can download the plan from your Customer Portal and receive delivery support through WhatsApp."],
-["Is this medical advice?","No. LeanFit provides general fitness guidance and is not a replacement for professional medical care."],
-];
-function WelcomePage({setPage}){return <main className="landing-page">
-<header className="landing-nav"><div><img src="/leanfit-logo.png" alt="LeanFit" className="landing-logo"/><span>By Varshith</span></div><nav><button onClick={()=>document.getElementById("pricing")?.scrollIntoView({behavior:"smooth"})}>Plans</button><button onClick={()=>setPage("about")}>About</button><button onClick={()=>setPage("contact")}>Contact</button><button className="nav-login" onClick={()=>setPage("login")}>Customer Login</button></nav></header>
-<section className="landing-hero"><div><p className="brand-label">PERSONALISED FITNESS SUPPORT</p><h1>Eat smarter.<br/>Train better.<br/><em>Transform yourself.</em></h1><p>Practical Indian nutrition guidance, structured workouts and progress tracking built around your goal and lifestyle.</p><div className="hero-actions"><button className="primary-btn" onClick={()=>setPage("register")}>Get My Plan</button><button className="secondary-btn light" onClick={()=>setPage("login")}>Customer Login</button></div><div className="trust-row"><span>✓ Simple</span><span>✓ Affordable</span><span>✓ Personalized</span></div></div><div className="hero-panel"><div><strong>Nutrition</strong><span>Foods, portions and macros</span></div><div><strong>Training</strong><span>Structured exercise plans</span></div><div><strong>Progress</strong><span>Habits, weight and history</span></div></div></section>
-<section className="landing-section"><p className="section-kicker">HOW IT WORKS</p><h2>Four simple steps to begin</h2><div className="steps-grid">{[["01","Create your account"],["02","Complete your profile"],["03","Choose a plan and pay"],["04","Receive and follow your plan"]].map(([n,t])=><article key={n}><span>{n}</span><h3>{t}</h3></article>)}</div></section>
-<section className="landing-section soft-section"><div className="section-heading"><div><p className="section-kicker">WHY LEANFIT</p><h2>Everything you need to stay consistent</h2></div><p>No extreme promises—just a clear system that helps you know what to eat, how to train and what to track.</p></div><div className="benefit-grid">{benefits.map(([icon,title],i)=><article key={title}><span className="benefit-icon" aria-hidden="true">{icon}</span><small>{String(i+1).padStart(2,"0")}</small><h3>{title}</h3></article>)}</div></section>
-<section className="landing-section transformation"><div><p className="section-kicker">REAL PROGRESS</p><h2>Your transformation story starts with consistent action.</h2><p>Track habits, meals, water and weight so improvement is measured by more than one photo or one day on the scale.</p></div><div className="progress-preview"><div><span>Week 1</span><strong>Start</strong></div><b>→</b><div><span>Week 12</span><strong>Progress</strong></div></div></section>
-<section className="landing-section" id="pricing"><p className="section-kicker">CHOOSE YOUR PLAN</p><h2>Simple pricing. Clear value.</h2><div className="pricing-grid"><article><h3>Diet Plan</h3><strong>₹199</strong><p>Personalized nutrition guidance, calories, macros and food alternatives.</p><button className="secondary-btn full-btn" onClick={()=>setPage("register")}>Choose Diet</button></article><article><h3>Workout Plan</h3><strong>₹199</strong><p>Goal-based workout structure with exercises, sets, repetitions and recovery.</p><button className="secondary-btn full-btn" onClick={()=>setPage("register")}>Choose Workout</button></article><article><div className="price-badge">POPULAR</div><h3>Diet + Workout</h3><strong>₹349</strong><p>Complete personalized diet and workout plan for your goal.</p><button className="secondary-btn full-btn" onClick={()=>setPage("register")}>Choose Combo</button></article><article className="featured-price"><span>BEST VALUE</span><h3>Lean Pro Membership</h3><strong>₹449</strong><ul className="price-features"><li>Diet plan</li><li>Workout plan</li><li>Progress tracking</li><li>Monthly updates</li><li>WhatsApp support</li></ul><button className="primary-btn full-btn" onClick={()=>setPage("register")}>Choose Lean Pro</button></article></div></section>
-<section className="landing-section testimonials"><p className="section-kicker">CUSTOMER EXPERIENCE</p><h2>Built to feel practical, not overwhelming.</h2><div className="testimonial-grid"><blockquote>“The food choices are familiar and easy to follow.”<cite>— Early LeanFit user</cite></blockquote><blockquote>“I finally know what to track instead of guessing every day.”<cite>— LeanFit member</cite></blockquote><blockquote>“The plan is structured but still gives useful alternatives.”<cite>— Early customer</cite></blockquote></div><small>Replace these sample statements with verified customer reviews before public promotion.</small></section>
-<section className="landing-section faq-section"><p className="section-kicker">FAQ</p><h2>Questions before you begin</h2><div className="faq-list">{faqs.map(([q,a])=><details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div></section>
-<footer className="landing-footer"><div><img src="/leanfit-logo.png" alt="LeanFit"/><p>Eat • Train • Transform</p></div><div className="footer-links"><button onClick={()=>setPage("about")}>About</button><button onClick={()=>setPage("contact")}>Contact</button><button onClick={()=>setPage("privacy")}>Privacy Policy</button><button onClick={()=>setPage("terms")}>Terms</button><button onClick={()=>setPage("admin-login")}>Admin</button></div><p>© 2026 LeanFit. All rights reserved.</p></footer>
-</main>}
+function WelcomePage({ setPage }) {
+  return (
+    <main className="welcome-page">
+      <header className="topbar">
+        <div>
+          <p className="topbar-brand">LEANFIT</p>
+          <p className="topbar-subtitle">By Varshith</p>
+        </div>
+
+        <button
+          className="admin-login-btn"
+          type="button"
+          onClick={() => {
+            window.location.href = "/admin";
+          }}
+        >
+          Admin Login
+        </button>
+      </header>
+
+      <section className="hero">
+        <div className="hero-content">
+          <p className="brand-label">PERSONALISED FITNESS SUPPORT</p>
+          <h1>Transform your body with a plan made for you.</h1>
+          <p className="hero-text">
+            Get practical Indian nutrition guidance, structured workouts and progress tracking based on your goal and lifestyle.
+          </p>
+
+          <div className="hero-actions">
+            <button className="primary-btn" type="button" onClick={() => setPage("register")}>
+              Get My Plan
+            </button>
+            <button className="secondary-btn light" type="button" onClick={() => setPage("login")}>
+              Customer Login
+            </button>
+          </div>
+        </div>
+
+        <div className="hero-summary" aria-label="LeanFit features">
+          <div className="summary-item">
+            <strong>Nutrition</strong>
+            <span>Indian meal plans and macros</span>
+          </div>
+          <div className="summary-item">
+            <strong>Training</strong>
+            <span>Goal-based workout programs</span>
+          </div>
+          <div className="summary-item">
+            <strong>Progress</strong>
+            <span>Track meals, weight and habits</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="features">
+        <article className="feature-card">
+          <span className="feature-number">01</span>
+          <h2>Personalized Nutrition</h2>
+          <p>Simple meal plans, calories, macros and suitable food alternatives.</p>
+        </article>
+
+        <article className="feature-card">
+          <span className="feature-number">02</span>
+          <h2>Workout Programs</h2>
+          <p>Gym and home workout plans structured around your experience and goal.</p>
+        </article>
+
+        <article className="feature-card">
+          <span className="feature-number">03</span>
+          <h2>Progress Tracking</h2>
+          <p>Track daily meals, water, weight and weekly progress in one place.</p>
+        </article>
+      </section>
+    </main>
+  );
+}
+
 export default WelcomePage;
