@@ -15,6 +15,10 @@ import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
 import CustomerPortal from "./components/CustomerPortal";
 import CustomerAuth from "./components/CustomerAuth";
+import InfoPage from "./components/InfoPage";
+import NotFoundPage from "./components/NotFoundPage";
+import UserProfile from "./components/UserProfile";
+import EmailTemplates from "./components/EmailTemplates";
 
 function App() {
   const [page, setPage] = useState("welcome");
@@ -175,9 +179,19 @@ function App() {
 
     case "admin":
       return <AdminDashboard setPage={setPage} />;
-
+    case "email-templates":
+      return <EmailTemplates setPage={setPage} />;
+    case "profile-settings":
+      return <UserProfile setPage={setPage} />;
+    case "privacy":
+    case "terms":
+    case "contact":
+    case "about":
+      return <InfoPage type={page} setPage={setPage} />;
+    case "not-found":
+      return <NotFoundPage setPage={setPage} />;
     default:
-      return <WelcomePage setPage={setPage} />;
+      return <NotFoundPage setPage={setPage} />;
   }
 }
 

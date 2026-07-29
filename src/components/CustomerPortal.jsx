@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PageLoader from "./PageLoader";
 
 const API_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
 
@@ -45,6 +46,8 @@ function CustomerPortal({ setPage }) {
     localStorage.removeItem("leanfitToken");
     setPage("welcome");
   };
+
+  if (message === "Loading your orders...") return <PageLoader label="Loading your LeanFit account..." />;
 
   return (
     <main className="page">
@@ -118,6 +121,8 @@ function CustomerPortal({ setPage }) {
             ))}
           </div>
         )}
+
+        <button className="secondary-btn full-btn" type="button" onClick={() => setPage("profile-settings")}>Profile & Security</button>
 
         <button className="text-btn" onClick={logout}>
           Logout

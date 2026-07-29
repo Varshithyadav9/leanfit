@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PageLoader from "./PageLoader";
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
 
@@ -116,9 +117,14 @@ function AdminDashboard({ setPage }) {
     (order) => order.status === "Pending"
   );
 
-  const deliveredOrders = orders.filter(
-    (order) => order.status === "Delivered"
-  );
+  const deliveredOrders = orders.filter((order) => order.status === "Delivered");
+  const verifiedOrders = orders.filter((order) => order.status === "Verified");
+  const rejectedOrders = orders.filter((order) => order.status === "Rejected");
+  const todayKey = new Date().toDateString();
+  const todayOrders = orders.filter((order) => new Date(order.createdAt).toDateString() === todayKey);
+  const maxCount = Math.max(orders.length, 1);
+
+  if (loading && orders.length === 0) return <PageLoader label="Loading LeanFit analytics..." />;
 
   return (
     <main className="admin-page">
@@ -129,9 +135,7 @@ function AdminDashboard({ setPage }) {
           <p>Verify payments and deliver customer plans.</p>
         </div>
 
-        <button className="secondary-btn" onClick={() => setPage("welcome")}>
-          Back to Website
-        </button>
+        <div className="admin-header-actions"><button className="secondary-btn" onClick={() => setPage("email-templates")}>Email Templates</button><button className="secondary-btn" onClick={() => setPage("welcome")}>Back to Website</button></div>
       </section>
 
       {message && <p className="muted">{message}</p>}
@@ -152,11 +156,11 @@ function AdminDashboard({ setPage }) {
           <strong>{deliveredOrders.length}</strong>
         </div>
 
-        <div className="admin-stat-card">
-          <span>Verified Revenue</span>
-          <strong>₹{totalRevenue}</strong>
-        </div>
+        <div className="admin-stat-card"><span>Verified Revenue</span><strong>₹{totalRevenue}</strong></div>
+        <div className="admin-stat-card"><span>Today’s Orders</span><strong>{todayOrders.length}</strong></div>
+        <div className="admin-stat-card"><span>Verified</span><strong>{verifiedOrders.length}</strong></div>
       </section>
+      <section className="analytics-card"><div><h3>Order Status Overview</h3><p className="muted">Live breakdown from all loaded orders.</p></div>{[["Pending",pendingOrders.length],["Verified",verifiedOrders.length],["Delivered",deliveredOrders.length],["Rejected",rejectedOrders.length]].map(([label,count])=><div className="analytics-row" key={label}><span>{label}</span><div><i style={{width:`${Math.max((count/maxCount)*100,count?5:0)}%`}}/></div><strong>{count}</strong></div>)}</section>
 
       <section className="admin-layout">
         <div className="admin-card">

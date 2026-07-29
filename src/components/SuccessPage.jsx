@@ -1,6 +1,6 @@
 function SuccessPage({ formData, setPage }) {
   return (
-    <main className="page">
+    <main className="success-animated page">
       <section className="card">
         <p className="brand-label">PAYMENT SUBMITTED</p>
 
