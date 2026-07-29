@@ -63,11 +63,51 @@ function InfoPage({ type, setPage }) {
         <p>{page.updated}</p>
       </section>
       <section className="info-content">
-        {page.sections.map(([heading, text]) => (
-          <article className="info-section" key={heading}>
-            <h2>{heading}</h2><p>{text}</p>
-          </article>
-        ))}
+        {type === "contact" ? (
+          <>
+            <a
+              className="info-section contact-link"
+              href="https://wa.me/916302993318?text=Hello%20LeanFit%2C%20I%20need%20support."
+              target="_blank"
+              rel="noreferrer"
+            >
+              <h2>WhatsApp</h2>
+              <p>+91 6302993318</p>
+              <span>Open WhatsApp →</span>
+            </a>
+
+            <a
+              className="info-section contact-link"
+              href="mailto:varshithyadav009@gmail.com?subject=LeanFit%20Support"
+            >
+              <h2>Email</h2>
+              <p>varshithyadav009@gmail.com</p>
+              <span>Send Email →</span>
+            </a>
+
+            <a
+              className="info-section contact-link"
+              href="https://www.instagram.com/lean_varshith/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <h2>Instagram</h2>
+              <p>@lean_varshith</p>
+              <span>Open Instagram →</span>
+            </a>
+
+            <article className="info-section">
+              <h2>Before contacting us</h2>
+              <p>Keep your order ID, registered email address and mobile number ready so we can locate your order quickly.</p>
+            </article>
+          </>
+        ) : (
+          page.sections.map(([heading, text]) => (
+            <article className="info-section" key={heading}>
+              <h2>{heading}</h2><p>{text}</p>
+            </article>
+          ))
+        )}
       </section>
     </main>
   );

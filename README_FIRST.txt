@@ -1,22 +1,16 @@
 LEANFIT PRICING + CONTACT FIX
 
 Replace these files in your project:
-- src/components/WelcomePage.jsx
-- src/components/InfoPage.jsx
-- src/App.css
+1. src/components/WelcomePage.jsx
+2. src/components/InfoPage.jsx
+3. src/App.css
 
 Changes:
-- Added Lean Pro Membership ₹449
-- Marked Lean Pro as BEST PLAN
-- Kept Diet + Workout ₹349 as BEST VALUE
-- Added WhatsApp: +91 6302993318
-- Added Email: varshithyadav009@gmail.com
-- Added Instagram: @lean_varshith
+- Removed the ₹349 plan from landing-page pricing.
+- Added ₹449 Lean Pro as the BEST VALUE plan.
+- WhatsApp opens +91 6302993318.
+- Email opens varshithyadav009@gmail.com.
+- Instagram opens @lean_varshith.
+- Contact cards are clickable.
 
-Then run:
-npm run dev
-
-After checking:
-git add .
-git commit -m "Fix pricing and contact details"
-git push
+After replacing, run npm run dev and test.
