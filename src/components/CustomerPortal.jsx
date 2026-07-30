@@ -35,7 +35,7 @@ function CustomerPortal({ setPage }) {
     const savedCustomer = localStorage.getItem("leanfitCustomer");
 
     if (!savedCustomer) {
-      setPage("customer-auth");
+      setPage("login");
       return;
     }
 
@@ -51,7 +51,7 @@ function CustomerPortal({ setPage }) {
       return () => window.clearInterval(refreshTimer);
     } catch {
       localStorage.removeItem("leanfitCustomer");
-      setPage("customer-auth");
+      setPage("login");
     }
   }, []);
 

@@ -41,6 +41,11 @@ Smoking: ${userData.smoking || "Not provided"}
 Alcohol: ${userData.alcohol || "Not provided"}
 Sleep: ${userData.sleep || "Not provided"}
 Stress: ${userData.stress || "Not provided"}
+Workout Days: ${userData.workoutDays || "Not provided"}
+Workout Location: ${userData.workoutLocation || "Not provided"}
+Workout Duration: ${userData.workoutDuration || "Not provided"}
+Training Style: ${userData.trainingStyle || "Not provided"}
+Injury / Movement Limitation: ${userData.injuryLimitations || "None"}
 
 CREATE CONTENT IN THIS EXACT STRUCTURE:
 

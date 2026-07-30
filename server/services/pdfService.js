@@ -6,6 +6,7 @@ import {
   vegetables,
   fruits,
 } from "../data/mealTemplates.js";
+import { getWorkoutPlan } from "../data/workoutTemplates.js";
 
 const COLORS = {
   green: "#16a34a",
@@ -1022,203 +1023,209 @@ function drawFoodGuidePage(doc, userData, planText, orderId, page, total) {
   addFooter(doc, page, total);
 }
 
-function workoutRows(userData = {}) {
-  const level = String(userData.experience || "Beginner").toLowerCase();
-  const days = Number(userData.workoutDays || userData.days || 0);
-
-  if (level.includes("advanced") || days >= 6) {
-    return [
-      {
-        day: "Day 1",
-        focus: "Chest + Triceps",
-        exercises: "Bench press, incline DB press, cable fly, triceps pushdown",
-        sets: "3–4",
-        reps: "8–12",
-      },
-      {
-        day: "Day 2",
-        focus: "Back + Biceps",
-        exercises: "Lat pulldown, seated row, RDL/deadlift, dumbbell curl",
-        sets: "3–4",
-        reps: "8–12",
-      },
-      {
-        day: "Day 3",
-        focus: "Quadriceps",
-        exercises: "Squat, leg press, split squat, leg extension, calf raise",
-        sets: "3–4",
-        reps: "8–15",
-      },
-      {
-        day: "Day 4",
-        focus: "Shoulders + Abs",
-        exercises: "Shoulder press, lateral raise, rear delt fly, plank",
-        sets: "3–4",
-        reps: "10–15",
-      },
-      {
-        day: "Day 5",
-        focus: "Upper Body",
-        exercises: "Chest press, row, pulldown, arms superset",
-        sets: "3",
-        reps: "10–15",
-      },
-      {
-        day: "Day 6",
-        focus: "Hamstrings + Glutes",
-        exercises: "RDL, hip thrust, leg curl, lunges, calf raise",
-        sets: "3–4",
-        reps: "8–15",
-      },
-    ];
-  }
-
-  if (level.includes("intermediate") || days >= 4) {
-    return [
-      {
-        day: "Day 1",
-        focus: "Upper Body",
-        exercises: "Bench press, row, shoulder press, pulldown, arms",
-        sets: "3",
-        reps: "8–12",
-      },
-      {
-        day: "Day 2",
-        focus: "Lower Body",
-        exercises: "Squat, RDL, leg press, leg curl, calf raise",
-        sets: "3",
-        reps: "8–15",
-      },
-      {
-        day: "Day 3",
-        focus: "Rest / Walking",
-        exercises: "Light walking and mobility",
-        sets: "-",
-        reps: "20–30 min",
-      },
-      {
-        day: "Day 4",
-        focus: "Push",
-        exercises: "Chest press, incline DB press, shoulder press, triceps",
-        sets: "3",
-        reps: "10–12",
-      },
-      {
-        day: "Day 5",
-        focus: "Pull + Legs",
-        exercises: "Pulldown, row, curls, split squat, leg curl",
-        sets: "3",
-        reps: "10–15",
-      },
-    ];
-  }
-
-  return [
-    {
-      day: "Day 1",
-      focus: "Full Body",
-      exercises: "Chest press, lat pulldown, leg press, shoulder press",
-      sets: "3",
-      reps: "10–12",
-    },
-    {
-      day: "Day 2",
-      focus: "Walking + Core",
-      exercises: "Brisk walking, plank, crunches",
-      sets: "3",
-      reps: "20–30 min",
-    },
-    {
-      day: "Day 3",
-      focus: "Full Body",
-      exercises: "Goblet squat, row, chest press, RDL, curls",
-      sets: "3",
-      reps: "10–12",
-    },
-    {
-      day: "Day 4",
-      focus: "Rest / Mobility",
-      exercises: "Light stretching and easy walking",
-      sets: "-",
-      reps: "15–20 min",
-    },
-    {
-      day: "Day 5",
-      focus: "Full Body",
-      exercises: "Leg press, pulldown, shoulder press, hip hinge, triceps",
-      sets: "3",
-      reps: "10–15",
-    },
-  ];
+function workoutSummaryRows(workoutPlan) {
+  return workoutPlan.sessions.map((session) => ({
+    day: session.day,
+    focus: session.focus,
+    exercises: session.exercises.map((item) => item.exercise).join(", "),
+  }));
 }
 
-function drawWorkoutPage(doc, userData, planText, orderId, page, total) {
+function drawWorkoutOverviewPage(doc, userData, orderId, page, total, workoutPlan) {
   addHeader(doc, "Personalized Workout Plan", orderId);
 
   let y = 115;
-  y = sectionTitle(doc, "Weekly Workout Schedule", y);
+  const gap = 8;
+  const boxWidth = (515 - gap * 4) / 5;
+
+  infoBox(doc, PAGE.left, y, boxWidth, "LEVEL", String(workoutPlan.level).toUpperCase());
+  infoBox(doc, PAGE.left + (boxWidth + gap), y, boxWidth, "DAYS", `${workoutPlan.days} / WEEK`);
+  infoBox(doc, PAGE.left + (boxWidth + gap) * 2, y, boxWidth, "LOCATION", workoutPlan.location);
+  infoBox(doc, PAGE.left + (boxWidth + gap) * 3, y, boxWidth, "DURATION", workoutPlan.duration);
+  infoBox(doc, PAGE.left + (boxWidth + gap) * 4, y, boxWidth, "STYLE", workoutPlan.style);
+
+  y += 66;
+  y = sectionTitle(doc, "Weekly Training Split", y);
+  y = basicTable(
+    doc,
+    PAGE.left,
+    y,
+    [
+      { label: "Day", key: "day", width: 62 },
+      { label: "Focus", key: "focus", width: 135 },
+      { label: "Main Exercises", key: "exercises", width: 318 },
+    ],
+    workoutSummaryRows(workoutPlan),
+    48
+  );
+
+  y += 18;
+  y = sectionTitle(doc, "How To Use This Plan", y);
+  const rules = workoutPlan.rules.slice(0, 5).map((rule, index) => ({
+    number: String(index + 1),
+    rule,
+  }));
+  basicTable(
+    doc,
+    PAGE.left,
+    y,
+    [
+      { label: "#", key: "number", width: 35 },
+      { label: "Training Rule", key: "rule", width: 480 },
+    ],
+    rules,
+    41
+  );
+
+  addFooter(doc, page, total);
+}
+
+function drawWorkoutSessionPage(doc, session, orderId, page, total, workoutPlan) {
+  addHeader(doc, `${session.day}: ${session.focus}`, orderId);
+
+  let y = 112;
+
+  doc
+    .roundedRect(PAGE.left, y, 515, 58, 7)
+    .fillAndStroke(COLORS.greenLight, COLORS.green);
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .fillColor(COLORS.green)
+    .text("WARM-UP", PAGE.left + 12, y + 10, { width: 80 });
+
+  doc
+    .font("Helvetica")
+    .fontSize(8)
+    .fillColor(COLORS.dark)
+    .text(session.warmup, PAGE.left + 92, y + 10, {
+      width: 408,
+      lineGap: 2,
+    });
+
+  y += 72;
+  y = sectionTitle(doc, "Exercise Plan", y);
 
   y = basicTable(
     doc,
     PAGE.left,
     y,
     [
-      { label: "Day", key: "day", width: 57 },
-      { label: "Focus", key: "focus", width: 105 },
-      { label: "Exercises", key: "exercises", width: 248 },
-      { label: "Sets", key: "sets", width: 47 },
-      { label: "Reps", key: "reps", width: 58 },
+      { label: "Exercise", key: "exercise", width: 145 },
+      { label: "Sets", key: "sets", width: 38 },
+      { label: "Reps", key: "reps", width: 61 },
+      { label: "Rest", key: "rest", width: 59 },
+      { label: "Effort", key: "intensity", width: 55 },
+      { label: "Technique Notes", key: "notes", width: 157 },
     ],
-    workoutRows(userData),
-    51
+    session.exercises,
+    62
   );
 
-  y += 18;
+  y += 16;
 
-  const notes =
-    extractSection(planText, "WORKOUT NOTES") ||
-    "Use controlled form. Stop each set with 1–3 good repetitions still possible. Increase weight only after completing the target repetitions with proper technique.";
+  const remaining = Math.max(0, PAGE.bottom - y - 16);
+  if (remaining >= 95) {
+    const half = (515 - 10) / 2;
 
-  y = sectionTitle(doc, "Workout Notes", y);
-  y = drawParagraph(doc, notes, y, {
-    width: 515,
-    fontSize: 8.5,
-  });
+    doc
+      .roundedRect(PAGE.left, y, half, 82, 6)
+      .fillAndStroke(COLORS.light, COLORS.border);
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(8.5)
+      .fillColor(COLORS.dark)
+      .text("OPTIONAL FINISHER", PAGE.left + 10, y + 10, { width: half - 20 });
+    doc
+      .font("Helvetica")
+      .fontSize(7.5)
+      .fillColor(COLORS.text)
+      .text(session.finisher, PAGE.left + 10, y + 29, {
+        width: half - 20,
+        lineGap: 2,
+      });
 
-  y += 18;
-  y = sectionTitle(doc, "Training Rules", y);
+    doc
+      .roundedRect(PAGE.left + half + 10, y, half, 82, 6)
+      .fillAndStroke(COLORS.light, COLORS.border);
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(8.5)
+      .fillColor(COLORS.dark)
+      .text("COOLDOWN", PAGE.left + half + 20, y + 10, { width: half - 20 });
+    doc
+      .font("Helvetica")
+      .fontSize(7.5)
+      .fillColor(COLORS.text)
+      .text(session.cooldown, PAGE.left + half + 20, y + 29, {
+        width: half - 20,
+        lineGap: 2,
+      });
+  }
 
-  basicTable(
+  addFooter(doc, page, total);
+}
+
+function drawWorkoutRecoveryPage(doc, userData, orderId, page, total, workoutPlan) {
+  addHeader(doc, "Progression, Recovery & Safety", orderId);
+
+  let y = 115;
+  y = sectionTitle(doc, "Progressive Overload", y);
+  y = basicTable(
     doc,
     PAGE.left,
     y,
     [
-      { label: "Rule", key: "rule", width: 145 },
-      { label: "Instruction", key: "instruction", width: 370 },
+      { label: "Step", key: "step", width: 70 },
+      { label: "What To Do", key: "instruction", width: 445 },
     ],
     [
-      {
-        rule: "Warm-up",
-        instruction: "5–10 minutes plus 1–2 light practice sets.",
-      },
-      {
-        rule: "Rest",
-        instruction: "60–90 seconds; up to 2 minutes for heavy compound lifts.",
-      },
-      {
-        rule: "Progression",
-        instruction: "Add repetitions first, then increase weight gradually.",
-      },
-      {
-        rule: "Cardio",
-        instruction: "20–30 minutes of walking 3–4 times each week.",
-      },
-      {
-        rule: "Recovery",
-        instruction: "Sleep 7–8 hours and keep at least one easier day weekly.",
-      },
+      { step: "1", instruction: "Choose a load that allows the lower end of the rep range with the prescribed repetitions in reserve." },
+      { step: "2", instruction: "Keep the same load and gradually add repetitions while technique remains consistent." },
+      { step: "3", instruction: "When every set reaches the top of the range, add 2.5-5% load and return to the lower end." },
+      { step: "4", instruction: "Record exercises, loads, repetitions and effort after every workout." },
     ],
-    34
+    50
+  );
+
+  y += 18;
+  y = sectionTitle(doc, "Warm-up Set Example For Heavy Lifts", y);
+  y = basicTable(
+    doc,
+    PAGE.left,
+    y,
+    [
+      { label: "Set", key: "set", width: 70 },
+      { label: "Approx. Load", key: "load", width: 120 },
+      { label: "Repetitions", key: "reps", width: 110 },
+      { label: "Purpose", key: "purpose", width: 215 },
+    ],
+    [
+      { set: "Warm-up 1", load: "40%", reps: "8-10", purpose: "Practice technique and increase temperature." },
+      { set: "Warm-up 2", load: "60%", reps: "5-6", purpose: "Prepare the target muscles and joints." },
+      { set: "Warm-up 3", load: "75%", reps: "2-3", purpose: "Prepare for the first working set without fatigue." },
+    ],
+    48
+  );
+
+  y += 18;
+  y = sectionTitle(doc, "Recovery Guidelines", y);
+  y = basicTable(
+    doc,
+    PAGE.left,
+    y,
+    [
+      { label: "Area", key: "area", width: 110 },
+      { label: "Guideline", key: "guideline", width: 405 },
+    ],
+    [
+      { area: "Sleep", guideline: "Aim for 7-9 hours. Reduce training effort when sleep has been poor for several nights." },
+      { area: "Cardio", guideline: "Use 2-4 easy sessions of 20-30 minutes weekly. Keep intense cardio away from demanding leg sessions." },
+      { area: "Deload", guideline: "After 6-8 hard weeks, reduce sets by about 40-50% and keep all sets well away from failure for one week." },
+      { area: "Pain", guideline: `Current limitation: ${userData.injuryLimitations || "None reported"}. Stop exercises that cause sharp or worsening pain and seek professional assessment.` },
+    ],
+    52
   );
 
   addFooter(doc, page, total);
@@ -1328,6 +1335,8 @@ export function createPlanPDF(userData = {}, planText = "", orderId = "") {
 
       const mealPlan = buildMealPlan(userData);
 
+      const workoutPlan = getWorkoutPlan(userData);
+
       if (dietOnly) {
         const total = 3;
 
@@ -1347,14 +1356,23 @@ export function createPlanPDF(userData = {}, planText = "", orderId = "") {
         doc.addPage();
         drawFoodGuidePage(doc, userData, planText, orderId, 3, total);
       } else if (workoutOnly) {
-        const total = 2;
+        const total = workoutPlan.sessions.length + 2;
+        let page = 1;
 
-        drawWorkoutPage(doc, userData, planText, orderId, 1, total);
+        drawWorkoutOverviewPage(doc, userData, orderId, page, total, workoutPlan);
+
+        for (const session of workoutPlan.sessions) {
+          doc.addPage();
+          page += 1;
+          drawWorkoutSessionPage(doc, session, orderId, page, total, workoutPlan);
+        }
 
         doc.addPage();
-        drawRecoveryPage(doc, orderId, 2, total);
+        page += 1;
+        drawWorkoutRecoveryPage(doc, userData, orderId, page, total, workoutPlan);
       } else {
-        const total = 5;
+        const total = 3 + workoutPlan.sessions.length + 2;
+        let page = 1;
 
         drawDietOverviewPage(
           doc,
@@ -1362,21 +1380,31 @@ export function createPlanPDF(userData = {}, planText = "", orderId = "") {
           planText,
           orderId,
           mealPlan,
-          1,
+          page,
           total
         );
 
         doc.addPage();
-        drawWorkoutNutritionPage(doc, orderId, mealPlan, 2, total);
+        page += 1;
+        drawWorkoutNutritionPage(doc, orderId, mealPlan, page, total);
 
         doc.addPage();
-        drawFoodGuidePage(doc, userData, planText, orderId, 3, total);
+        page += 1;
+        drawFoodGuidePage(doc, userData, planText, orderId, page, total);
 
         doc.addPage();
-        drawWorkoutPage(doc, userData, planText, orderId, 4, total);
+        page += 1;
+        drawWorkoutOverviewPage(doc, userData, orderId, page, total, workoutPlan);
+
+        for (const session of workoutPlan.sessions) {
+          doc.addPage();
+          page += 1;
+          drawWorkoutSessionPage(doc, session, orderId, page, total, workoutPlan);
+        }
 
         doc.addPage();
-        drawRecoveryPage(doc, orderId, 5, total);
+        page += 1;
+        drawWorkoutRecoveryPage(doc, userData, orderId, page, total, workoutPlan);
       }
 
       doc.end();

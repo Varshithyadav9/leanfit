@@ -1,23 +1,15 @@
-LEANFIT AUTHENTICATION & SECURITY UPDATE
+LeanFit Calculator Welcome Update
 
-Replace the included src and server files in your current LeanFit project.
+Replace these files in your frontend:
+- src/components/WelcomePage.jsx
+- src/components/Calculators.jsx
+- src/App.css
 
-Render environment variables required:
-- JWT_SECRET: a long random secret (at least 32 characters)
-- RESEND_API_KEY: your active Resend API key
-- EMAIL_FROM: verified sender, for example LeanFit <support@yourdomain.com>
+App.jsx is included only for reference. Your current App.jsx already imports Calculators and contains the calculators page case.
 
-Features:
-- Strict email and 10-digit mobile validation
-- Duplicate email/mobile blocking
-- Password requires at least 8 characters with a letter and number
-- Passwords hashed with bcrypt (12 rounds)
-- 7-day JWT sessions and automatic expired-session cleanup
-- Remember Me: localStorage when selected, sessionStorage when not selected
-- Protected customer pages
-- Forgot Password using a 6-digit email code valid for 10 minutes
-- Maximum 5 incorrect reset-code attempts
-- Better authentication error messages
-
-Important:
-Forgot Password email works only after RESEND_API_KEY and EMAIL_FROM are correctly configured on Render.
+Test:
+1. Run npm run dev
+2. Open the Welcome Page
+3. Click Open Free Calculators
+4. Change weight, height, age, activity and goal
+5. Test Back to Home and Get My Plan

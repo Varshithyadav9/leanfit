@@ -60,7 +60,7 @@ function Dashboard({ formData, setPage }) {
       const savedCustomer = localStorage.getItem("leanfitCustomer");
 
       if (!savedCustomer) {
-        setPage("customer-auth");
+        setPage("login");
         return;
       }
 
