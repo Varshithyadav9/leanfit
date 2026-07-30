@@ -1,78 +1,61 @@
-function WelcomePage({ setPage }) {
-  return (
-    <main className="welcome-page">
-      <header className="topbar">
-        <div>
-          <p className="topbar-brand">LEANFIT</p>
-          <p className="topbar-subtitle">By Varshith</p>
-        </div>
+import { Link } from "react-router-dom";
 
-        <button
-          className="admin-login-btn"
-          type="button"
-          onClick={() => {
-            window.location.href = "/admin";
-          }}
-        >
-          Admin Login
-        </button>
+export default function WelcomePage() {
+  return (
+    <div className="min-h-screen bg-white text-gray-900">
+      <header style={{padding:"20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <h1 style={{fontSize:"2rem",fontWeight:"bold",color:"#16a34a"}}>LeanFit</h1>
       </header>
 
-      <section className="hero">
-        <div className="hero-content">
-          <p className="brand-label">PERSONALISED FITNESS SUPPORT</p>
-          <h1>Transform your body with a plan made for you.</h1>
-          <p className="hero-text">
-            Get practical Indian nutrition guidance, structured workouts and progress tracking based on your goal and lifestyle.
-          </p>
+      <main style={{maxWidth:"900px",margin:"0 auto",padding:"40px 20px",textAlign:"center"}}>
+        <h2 style={{fontSize:"2.5rem",fontWeight:"bold"}}>
+          AI Diet & Workout Planner
+        </h2>
 
-          <div className="hero-actions">
-            <button className="primary-btn" type="button" onClick={() => setPage("register")}>
-              Get My Plan
-            </button>
-            <button className="secondary-btn light" type="button" onClick={() => setPage("login")}>
-              Customer Login
-            </button>
-          </div>
+        <p style={{marginTop:"20px",fontSize:"1.1rem",color:"#555"}}>
+          Generate a personalized diet and workout plan in just a few minutes.
+        </p>
+
+        <div style={{marginTop:"30px"}}>
+          <Link to="/generate">
+            <button style={{padding:"14px 28px",margin:"10px"}}>Get My Plan</button>
+          </Link>
+
+          <Link to="/login">
+            <button style={{padding:"14px 28px",margin:"10px"}}>Customer Login</button>
+          </Link>
+
+          <Link to="/admin-login">
+            <button style={{padding:"14px 28px",margin:"10px"}}>Admin Login</button>
+          </Link>
         </div>
 
-        <div className="hero-summary" aria-label="LeanFit features">
-          <div className="summary-item">
-            <strong>Nutrition</strong>
-            <span>Indian meal plans and macros</span>
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
+          gap:"20px",
+          marginTop:"60px"
+        }}>
+          <div style={{padding:"20px",border:"1px solid #ddd",borderRadius:"10px"}}>
+            <h3>🥗 Diet Plan</h3>
+            <p>Personalized meals based on your goal.</p>
           </div>
-          <div className="summary-item">
-            <strong>Training</strong>
-            <span>Goal-based workout programs</span>
+
+          <div style={{padding:"20px",border:"1px solid #ddd",borderRadius:"10px"}}>
+            <h3>🏋️ Workout Plan</h3>
+            <p>Training routine designed for you.</p>
           </div>
-          <div className="summary-item">
-            <strong>Progress</strong>
-            <span>Track meals, weight and habits</span>
+
+          <div style={{padding:"20px",border:"1px solid #ddd",borderRadius:"10px"}}>
+            <h3>🤖 AI Powered</h3>
+            <p>Instant plans generated using AI.</p>
           </div>
         </div>
-      </section>
+      </main>
 
-      <section className="features">
-        <article className="feature-card">
-          <span className="feature-number">01</span>
-          <h2>Personalized Nutrition</h2>
-          <p>Simple meal plans, calories, macros and suitable food alternatives.</p>
-        </article>
-
-        <article className="feature-card">
-          <span className="feature-number">02</span>
-          <h2>Workout Programs</h2>
-          <p>Gym and home workout plans structured around your experience and goal.</p>
-        </article>
-
-        <article className="feature-card">
-          <span className="feature-number">03</span>
-          <h2>Progress Tracking</h2>
-          <p>Track daily meals, water, weight and weekly progress in one place.</p>
-        </article>
-      </section>
-    </main>
+      <footer style={{textAlign:"center",padding:"30px",color:"#777"}}>
+        © 2026 LeanFit. All Rights Reserved.
+      </footer>
+    </div>
   );
 }
-
-export default WelcomePage;
