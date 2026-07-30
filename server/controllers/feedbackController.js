@@ -92,3 +92,17 @@ export async function updateFeedbackApproval(req, res) {
     return res.status(500).json({ success: false, message: "Unable to update feedback." });
   }
 }
+
+
+export async function getPublicFeedback(req, res) {
+  try {
+    const feedback = await Feedback.find({ approved: true })
+      .select("customerName selectedPlan rating subject comment createdAt")
+      .sort({ createdAt: -1 })
+      .limit(12);
+    return res.json({ success: true, feedback });
+  } catch (error) {
+    console.error("getPublicFeedback error:", error);
+    return res.status(500).json({ success: false, message: "Unable to load testimonials." });
+  }
+}

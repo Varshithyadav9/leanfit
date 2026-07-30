@@ -190,6 +190,7 @@ function CustomerPortal({ setPage }) {
       </section>
 
       <section className="customer-portal-footer-actions">
+        <button className="secondary-btn" type="button" onClick={() => setPage("feedback")}>Give Feedback</button>
         <button className="secondary-btn" type="button" onClick={() => setPage("profile-settings")}>
           Profile & Security
         </button>

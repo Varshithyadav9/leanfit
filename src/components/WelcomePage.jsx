@@ -9,7 +9,6 @@ function WelcomePage({ setPage }) {
         </button>
 
         <nav className="compact-nav" aria-label="Main navigation">
-          <button type="button" onClick={() => openInfo("about")}>About</button>
           <button type="button" onClick={() => openInfo("contact")}>Contact</button>
           <button type="button" className="customer-login-link" onClick={() => setPage("login")}>Customer Login</button>
           <button type="button" className="admin-login-btn" onClick={() => setPage("admin-login")}>Admin Login</button>
@@ -38,9 +37,27 @@ function WelcomePage({ setPage }) {
       </section>
 
       <section className="features compact-features">
-        <article className="feature-card"><span className="feature-number">01</span><h2>Personalized Nutrition</h2><p>Simple meal plans, calories, macros and practical food alternatives.</p></article>
-        <article className="feature-card"><span className="feature-number">02</span><h2>Workout Programs</h2><p>Gym and home workout plans built around your experience and goal.</p></article>
-        <article className="feature-card"><span className="feature-number">03</span><h2>Progress Tracking</h2><p>Track daily meals, water, weight and weekly progress in one place.</p></article>
+        <article className="feature-card compact-feature-card">
+          <span className="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 14c4.2 0 7.6-3.4 7.6-7.6V4C7.4 4 4 7.4 4 11.6V14Zm0 0c0 3.3 2.7 6 6 6h1v-2c0-2.2-1.8-4-4-4H4Zm8-2c4.4 0 8-3.6 8-8-4.4 0-8 3.6-8 8Z"/></svg>
+          </span>
+          <h2>Personalized Nutrition</h2>
+          <p>Simple meal plans, calories, macros and practical food alternatives.</p>
+        </article>
+        <article className="feature-card compact-feature-card">
+          <span className="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 9v6m3-8v10m10-10v10m3-8v6M7 12h10"/></svg>
+          </span>
+          <h2>Workout Programs</h2>
+          <p>Gym and home workout plans built around your experience and goal.</p>
+        </article>
+        <article className="feature-card compact-feature-card">
+          <span className="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 19V9m7 10V5m7 14v-7M3 19h18"/></svg>
+          </span>
+          <h2>Progress Tracking</h2>
+          <p>Track daily meals, water, weight and weekly progress in one place.</p>
+        </article>
       </section>
 
       <section className="compact-info-strip">
@@ -50,9 +67,8 @@ function WelcomePage({ setPage }) {
       </section>
 
       <footer className="compact-footer">
-        <div className="footer-brand"><img src="/leanfit-logo.png" alt="LeanFit" /><p>Personalized fitness support by Varshith.</p></div>
+        <div className="footer-brand"><img src="/leanfit-logo.png" alt="LeanFit" /><p>Personalized fitness guidance for Indian lifestyles.</p></div>
         <div className="compact-footer-links">
-          <button type="button" onClick={() => openInfo("about")}>About</button>
           <button type="button" onClick={() => openInfo("contact")}>Contact</button>
           <button type="button" onClick={() => openInfo("privacy")}>Privacy Policy</button>
           <button type="button" onClick={() => openInfo("terms")}>Terms & Conditions</button>

@@ -1,24 +1,15 @@
-LeanFit compact welcome and admin update
+LeanFit Welcome Page Final Polish
 
 Replace these files in your current project:
-1. src/components/WelcomePage.jsx
-2. src/components/AdminDashboard.jsx
-3. src/App.css
+- src/components/WelcomePage.jsx
+- src/App.css
 
 Changes:
-- Restores the LeanFit logo on the welcome page.
-- Keeps the welcome page compact.
-- Adds About, Contact, Privacy Policy and Terms & Conditions links.
-- Adds a small Simple / Affordable / Personalized information strip.
-- Adds a compact footer.
-- Fixes Admin Login to use setPage("admin-login") instead of /admin.
-- Removes the customer Settings button from the Admin Dashboard.
-- Keeps Email Templates and Back to Website in Admin.
+- Removed duplicate About link from top navigation
+- Kept Contact, Customer Login and Admin Login in header
+- Kept About, Contact, Privacy Policy and Terms in footer
+- Increased logo size slightly
+- Replaced feature numbers with subtle professional SVG background icons
+- Updated footer description
 
-Push after replacement:
-git add .
-git commit -m "Update compact welcome page and admin navigation"
-git push origin main
-
-Build note:
-The files were checked for integration against leanfit-v2(17).zip. A full local Vite build could not complete in this environment because the uploaded node_modules is missing the Linux rolldown native binding. Vercel will install dependencies for its own environment during deployment.
+Authentication will be handled in the final authentication update.

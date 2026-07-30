@@ -1,0 +1,23 @@
+LEANFIT V3.0 — CHANGED FILES ONLY
+
+1. Extract this ZIP.
+2. Copy all included files/folders into your current LeanFit project root.
+3. Choose "Replace the files in the destination" when Windows asks.
+4. Run: npm install
+5. Test: npm run build
+6. Push to GitHub/Vercel.
+
+New files:
+- src/components/Calculators.jsx
+- src/components/FeedbackPage.jsx
+
+Updated files:
+- package.json
+- package-lock.json
+- server/controllers/feedbackController.js
+- server/routes/feedbackRoutes.js
+- src/App.css
+- src/App.jsx
+- src/components/AdminDashboard.jsx
+- src/components/CustomerPortal.jsx
+- src/components/WelcomePage.jsx

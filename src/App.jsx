@@ -21,6 +21,8 @@ import Profile from "./components/Profile";
 import Settings from "./components/Settings";
 import EmailTemplates from "./components/EmailTemplates";
 import SmartCoach from "./components/SmartCoach";
+import Calculators from "./components/Calculators";
+import FeedbackPage from "./components/FeedbackPage";
 
 function App() {
   const [page, setPage] = useState("welcome");
@@ -189,6 +191,12 @@ function App() {
       return <Settings setPage={setPage} />;
     case "smart-coach":
       return <SmartCoach formData={formData} setPage={setPage} />;
+    case "calculators":
+      return <Calculators setPage={setPage} />;
+    case "feedback":
+      return <FeedbackPage setPage={setPage} mode="customer" />;
+    case "admin-feedback":
+      return <FeedbackPage setPage={setPage} mode="admin" />;
     case "privacy":
     case "terms":
     case "contact":
