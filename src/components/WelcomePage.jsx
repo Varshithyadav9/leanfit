@@ -9,7 +9,7 @@ function WelcomePage({ setPage }) {
         </button>
 
         <nav className="compact-nav" aria-label="Main navigation">
-          <button type="button" onClick={() => openInfo("contact")}>Contact</button>
+          <button type="button" onClick={() => openInfo("about")}>About</button>
           <button type="button" className="customer-login-link" onClick={() => setPage("login")}>Customer Login</button>
           <button type="button" className="admin-login-btn" onClick={() => setPage("admin-login")}>Admin Login</button>
         </nav>
@@ -25,7 +25,7 @@ function WelcomePage({ setPage }) {
 
           <div className="hero-actions">
             <button className="primary-btn" type="button" onClick={() => setPage("register")}>Get My Plan</button>
-            <button className="secondary-btn light" type="button" onClick={() => setPage("customer-portal")}>View My Orders</button>
+            <button className="secondary-btn light" type="button" onClick={() => setPage("login")}>Customer Login</button>
           </div>
         </div>
 
