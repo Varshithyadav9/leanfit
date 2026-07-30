@@ -1,13 +1,24 @@
-LEANFIT ADMIN LOGIN FIX
+LeanFit compact welcome and admin update
 
-1. Copy src/components/WelcomePage.jsx
-2. Paste it into your LeanFit project at src/components/WelcomePage.jsx
-3. Replace the existing file.
-4. Run:
-   git add .
-   git commit -m "Fix admin login navigation"
-   git push origin main
+Replace these files in your current project:
+1. src/components/WelcomePage.jsx
+2. src/components/AdminDashboard.jsx
+3. src/App.css
 
-Cause fixed:
-- Removed react-router-dom import because this project uses setPage navigation.
-- Admin Login now calls setPage("admin-login") instead of opening /admin directly.
+Changes:
+- Restores the LeanFit logo on the welcome page.
+- Keeps the welcome page compact.
+- Adds About, Contact, Privacy Policy and Terms & Conditions links.
+- Adds a small Simple / Affordable / Personalized information strip.
+- Adds a compact footer.
+- Fixes Admin Login to use setPage("admin-login") instead of /admin.
+- Removes the customer Settings button from the Admin Dashboard.
+- Keeps Email Templates and Back to Website in Admin.
+
+Push after replacement:
+git add .
+git commit -m "Update compact welcome page and admin navigation"
+git push origin main
+
+Build note:
+The files were checked for integration against leanfit-v2(17).zip. A full local Vite build could not complete in this environment because the uploaded node_modules is missing the Linux rolldown native binding. Vercel will install dependencies for its own environment during deployment.
