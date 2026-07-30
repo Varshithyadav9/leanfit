@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
 import ProgressCharts from "./ProgressCharts";
+import Notifications from "./Notifications";
+
+function DashboardIcon({ name }) {
+  const paths = {
+    home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V21h13V10.5"/><path d="M9.5 21v-6h5v6"/></>,
+    meal: <><path d="M4 3v8a3 3 0 0 0 3 3V3"/><path d="M7 14v7"/><path d="M15 3v18"/><path d="M15 3c4 2 5 7 0 10"/></>,
+    progress: <><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/></>,
+    water: <><path d="M12 2s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12Z"/><path d="M9 15a3 3 0 0 0 3 2"/></>,
+    user: <><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
+  };
+  return <svg className="dashboard-icon" viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
+}
 
 function Dashboard({ formData, setPage }) {
   const [customer, setCustomer] = useState(null);
@@ -465,30 +477,47 @@ function Dashboard({ formData, setPage }) {
     saveProgress(loggedMeals, water, weight);
   };
 
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? "Good morning" : currentHour < 17 ? "Good afternoon" : "Good evening";
+  const firstName = (customer?.name || formData.name || "Member").split(" ")[0];
+  const scrollToSection = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  const customerNotifications = [
+    { id: "dashboard-welcome", title: "Lean Pro is active", message: "Your dashboard and progress tools are ready to use.", time: "Account update", type: "success" },
+    ...(loggedMeals.length === 0 ? [{ id: `meal-reminder-${today}`, title: "Log your first meal", message: "Add a meal to start tracking today's calories and macros.", time: "Today", type: "info" }] : []),
+    ...(water < 2 ? [{ id: `water-reminder-${today}`, title: "Hydration reminder", message: "You are below your daily water target. Add your next glass.", time: "Today", type: "warning" }] : []),
+    ...(weeklyReport ? [{ id: `weekly-report-${today}`, title: "Weekly report ready", message: "Your latest progress summary is available in the dashboard.", time: "This week", type: "success" }] : []),
+  ];
+
   return (
     <main className="dashboard-page">
-      <section className="dashboard-header-card">
-        <div>
+      <section className="dashboard-header-card premium-dashboard-header" id="dashboard-home">
+        <div className="dashboard-welcome">
           <p className="brand-label">LEAN PRO DASHBOARD</p>
-          <h2>Welcome, {customer?.name || formData.name || "Member"}</h2>
-          <p>Track your nutrition, meals, water intake and progress.</p>
+          <h2>{greeting}, {firstName}</h2>
+          <p>One clear view of your meals, hydration, nutrition and weekly progress.</p>
 
-          <div className="access-card">
-            <h3>Lean Pro Access</h3>
-            <p>Membership active for 30 days from purchase.</p>
-            <strong>Access: Active</strong>
+          <div className="dashboard-access-pill">
+            <span className="status-dot" />
+            Lean Pro active · 30-day access
           </div>
         </div>
 
-        <button
-          className="secondary-btn"
-          onClick={() => setPage("customer-portal")}
-        >
-          My Orders
-        </button>
+        <div className="dashboard-header-actions">
+          <Notifications items={customerNotifications} storageKey="leanfitCustomerNotificationReads" title="Your notifications" />
+          <button className="secondary-btn" onClick={() => scrollToSection("food-tracker")}>
+            Log a Meal
+          </button>
+          <button className="primary-btn" onClick={() => setPage("smart-coach")}>
+            Open Smart Coach
+          </button>
+          <button className="secondary-btn" onClick={() => setPage("customer-portal")}>
+            My Orders
+          </button>
+        </div>
       </section>
 
-      <section className="summary-grid">
+      <section className="summary-grid dashboard-overview" id="today-progress">
         <div className="summary-card">
           <span>Calories</span>
           <strong>
@@ -599,7 +628,7 @@ function Dashboard({ formData, setPage }) {
         </div>
       </section>
 
-      <section className="dashboard-section">
+      <section className="dashboard-section" id="food-tracker">
         <div className="section-head">
           <div>
             <h3>Food Tracker</h3>
@@ -641,7 +670,7 @@ function Dashboard({ formData, setPage }) {
                   ? "Listening..."
                   : analyzingVoice
                   ? "Analyzing Meal..."
-                  : "🎤 Speak Meal"}
+                  : "Speak Meal"}
               </button>
             </div>
           </div>
@@ -839,7 +868,7 @@ function Dashboard({ formData, setPage }) {
         )}
       </section>
 
-      <section className="dashboard-section">
+      <section className="dashboard-section" id="water-tracker">
         <div className="section-head">
           <div>
             <h3>Water Intake</h3>
@@ -854,7 +883,7 @@ function Dashboard({ formData, setPage }) {
         </div>
       </section>
 
-      <section className="dashboard-section">
+      <section className="dashboard-section" id="progress-tracker">
         <div className="section-head">
           <div>
             <h3>Weight Progress</h3>
@@ -1050,6 +1079,14 @@ function Dashboard({ formData, setPage }) {
         )}
       </section>
       <ProgressCharts history={history} />
+
+      <nav className="mobile-dashboard-nav" aria-label="Lean Pro navigation">
+        <button type="button" onClick={() => scrollToSection("dashboard-home")}><DashboardIcon name="home" /><span>Home</span></button>
+        <button type="button" onClick={() => scrollToSection("food-tracker")}><DashboardIcon name="meal" /><span>Meals</span></button>
+        <button type="button" onClick={() => scrollToSection("today-progress")}><DashboardIcon name="progress" /><span>Progress</span></button>
+        <button type="button" onClick={() => scrollToSection("water-tracker")}><DashboardIcon name="water" /><span>Water</span></button>
+        <button type="button" onClick={() => setPage("profile-settings")}><DashboardIcon name="user" /><span>Profile</span></button>
+      </nav>
     </main>
   );
 }

@@ -17,8 +17,10 @@ import CustomerPortal from "./components/CustomerPortal";
 import CustomerAuth from "./components/CustomerAuth";
 import InfoPage from "./components/InfoPage";
 import NotFoundPage from "./components/NotFoundPage";
-import UserProfile from "./components/UserProfile";
+import Profile from "./components/Profile";
+import Settings from "./components/Settings";
 import EmailTemplates from "./components/EmailTemplates";
+import SmartCoach from "./components/SmartCoach";
 
 function App() {
   const [page, setPage] = useState("welcome");
@@ -182,7 +184,11 @@ function App() {
     case "email-templates":
       return <EmailTemplates setPage={setPage} />;
     case "profile-settings":
-      return <UserProfile setPage={setPage} />;
+      return <Profile setPage={setPage} />;
+    case "settings":
+      return <Settings setPage={setPage} />;
+    case "smart-coach":
+      return <SmartCoach formData={formData} setPage={setPage} />;
     case "privacy":
     case "terms":
     case "contact":

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import PageLoader from "./PageLoader";
+import Notifications from "./Notifications";
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
 
@@ -165,6 +166,29 @@ function AdminDashboard({ setPage }) {
   const todayKey = new Date().toDateString();
   const todayOrders = orders.filter((order) => new Date(order.createdAt).toDateString() === todayKey);
   const maxCount = Math.max(orders.length, 1);
+  const adminNotifications = [
+    ...pendingOrders.slice(0, 5).map((order) => ({
+      id: `pending-${order.orderId}`,
+      title: "Payment verification required",
+      message: `${order.name || "Customer"} submitted order ${order.orderId}.`,
+      time: order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN") : "Recently",
+      type: "warning",
+    })),
+    ...todayOrders.slice(0, 3).map((order) => ({
+      id: `new-${order.orderId}`,
+      title: "New order received",
+      message: `${order.selectedPlan || "Plan"} order from ${order.name || "Customer"}.`,
+      time: order.createdAt ? new Date(order.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "Today",
+      type: "info",
+    })),
+    ...deliveredOrders.slice(0, 2).map((order) => ({
+      id: `delivered-${order.orderId}`,
+      title: "Plan delivered",
+      message: `Order ${order.orderId} has been completed.`,
+      time: "Completed",
+      type: "success",
+    })),
+  ];
 
   if (loading && orders.length === 0) return <PageLoader label="Loading LeanFit analytics..." />;
 
@@ -177,7 +201,7 @@ function AdminDashboard({ setPage }) {
           <p>Verify payments and deliver customer plans.</p>
         </div>
 
-        <div className="admin-header-actions"><button className="secondary-btn" onClick={() => setPage("email-templates")}>Email Templates</button><button className="secondary-btn" onClick={() => setPage("welcome")}>Back to Website</button></div>
+        <div className="admin-header-actions"><Notifications items={adminNotifications} storageKey="leanfitAdminNotificationReads" title="Admin notifications" /><button className="secondary-btn" onClick={() => setPage("settings")}>Settings</button><button className="secondary-btn" onClick={() => setPage("email-templates")}>Email Templates</button><button className="secondary-btn" onClick={() => setPage("welcome")}>Back to Website</button></div>
       </section>
 
       {message && <p className="muted">{message}</p>}

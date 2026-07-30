@@ -1,0 +1,25 @@
+LEANFIT V2.5 UPDATE
+
+Changed files:
+- src/App.jsx
+- src/App.css
+- src/components/Dashboard.jsx
+- src/components/SmartCoach.jsx (new)
+
+What is included:
+- Existing AI meal photo recognition remains available
+- Existing voice meal logging remains available
+- Existing barcode nutrition lookup remains available
+- New Smart Nutrition targets
+- New personalized workout coach (3-6 days/week)
+- New dashboard button to open Smart Coach
+
+How to apply:
+1. Copy the src folder from this update ZIP into your current LeanFit project.
+2. Allow Windows to replace the existing files.
+3. Run npm install, then npm run build.
+4. Push the changed files to GitHub; Vercel will redeploy automatically.
+
+Important:
+- This update ZIP contains only changed frontend files.
+- No server replacement is required for this V2.5 update because the uploaded project already includes food photo, voice, barcode and weekly report APIs.
