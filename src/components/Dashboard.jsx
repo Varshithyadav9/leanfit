@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import ProgressCharts from "./ProgressCharts";
-import Notifications from "./Notifications";
 
 const API_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
 
@@ -519,13 +518,6 @@ function Dashboard({ formData, setPage }) {
   const firstName = (customer?.name || formData.name || "Member").split(" ")[0];
   const scrollToSection = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-  const customerNotifications = [
-    { id: "dashboard-welcome", title: "Lean Pro is active", message: "Your dashboard and progress tools are ready to use.", time: "Account update", type: "success" },
-    ...(loggedMeals.length === 0 ? [{ id: `meal-reminder-${today}`, title: "Log your first meal", message: "Add a meal to start tracking today's calories and macros.", time: "Today", type: "info" }] : []),
-    ...(water < 2 ? [{ id: `water-reminder-${today}`, title: "Hydration reminder", message: "You are below your daily water target. Add your next glass.", time: "Today", type: "warning" }] : []),
-    ...(weeklyReport ? [{ id: `weekly-report-${today}`, title: "Weekly report ready", message: "Your latest progress summary is available in the dashboard.", time: "This week", type: "success" }] : []),
-  ];
-
   if (accessChecking) {
     return (
       <main className="page">
@@ -565,7 +557,6 @@ function Dashboard({ formData, setPage }) {
         </div>
 
         <div className="dashboard-header-actions">
-          <Notifications items={customerNotifications} storageKey="leanfitCustomerNotificationReads" title="Your notifications" />
           <button className="secondary-btn" onClick={() => scrollToSection("food-tracker")}>
             Log a Meal
           </button>

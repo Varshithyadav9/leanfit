@@ -20,7 +20,7 @@ const orderSchema = new mongoose.Schema(
     pdfSent: { type: Boolean, default: false },
     emailStatus: {
       type: String,
-      enum: ["Not Sent", "Sending", "Sent", "Failed"],
+      enum: ["Not Sent", "Sending", "Sent", "Failed", "Manual"],
       default: "Not Sent",
     },
     emailError: { type: String, default: "" },
