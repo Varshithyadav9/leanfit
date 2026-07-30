@@ -1,26 +1,17 @@
-LEANFIT WORKFLOW POLISH
+LEANFIT FEEDBACK SYSTEM UPDATE
 
-Replace only these 3 files:
-1. src/components/CustomerPortal.jsx
-2. src/components/AdminDashboard.jsx
-3. src/App.css
+Copy the included src and server folders into your current LeanFit project and choose Replace files.
 
-What changed:
-- Customer order progress timeline
-- Customer order summary cards
-- Refresh orders button
-- Better mobile Customer Portal
-- Lean Pro dashboard remains available after Delivered status
-- Admin status filter
-- Admin newest/oldest sorting
-- Export visible orders to CSV
-- Better mobile admin controls
+Included behavior:
+- Customer feedback button in Customer Portal
+- Feedback only for delivered orders
+- One feedback per order
+- 1–5 rating, subject and comment
+- Admin Feedback button and management page
+- Admin approve/hide control
+- Mobile responsive feedback UI
 
-No backend files were changed.
-
-After replacement:
-npm run dev
-
-git add .
-git commit -m "Improve customer portal and admin workflow"
-git push
+After replacing files:
+1. Push frontend changes to GitHub/Vercel.
+2. Push server changes to Render.
+3. Test with one order marked Delivered.
