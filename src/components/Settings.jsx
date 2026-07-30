@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { clearSession } from "../utils/auth";
 
 const DEFAULTS = {
   theme: "light",
@@ -44,8 +45,7 @@ function Settings({ setPage }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("leanfitToken");
-    localStorage.removeItem("leanfitCustomer");
+    clearSession();
     setPage("welcome");
   };
 

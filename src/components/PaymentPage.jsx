@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 
-const API_BASE_URL = "https://leanfit.onrender.com/api";
+const API_BASE_URL = `${(
+  import.meta.env.VITE_API_URL || "https://leanfit.onrender.com"
+).replace(/\/$/, "")}/api`;
 const UPI_ID = "varshith0409@axl";
 
-function PaymentPage({ formData, setPage }) {
+function PaymentPage({ formData, setPage, setSubmittedOrder }) {
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -26,7 +28,6 @@ function PaymentPage({ formData, setPage }) {
 
   const handleScreenshotChange = (event) => {
     const file = event.target.files?.[0];
-
     setError("");
 
     if (!file) {
@@ -90,6 +91,19 @@ function PaymentPage({ formData, setPage }) {
         throw new Error(data.message || "Unable to submit payment.");
       }
 
+      const orderDetails = {
+        orderId: data.orderId,
+        status: data.status || "Pending",
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile || "",
+        selectedPlan,
+        selectedPrice,
+        submittedAt: new Date().toISOString(),
+      };
+
+      localStorage.setItem("leanfitLastSubmittedOrder", JSON.stringify(orderDetails));
+      setSubmittedOrder?.(orderDetails);
       setPage("success");
     } catch (submitError) {
       setError(
@@ -119,28 +133,16 @@ function PaymentPage({ formData, setPage }) {
 
         <div className="summary-box">
           <h3>Order Summary</h3>
-          <p>
-            <strong>Name:</strong> {formData.name || "Not specified"}
-          </p>
-          <p>
-            <strong>Email:</strong> {formData.email || "Not specified"}
-          </p>
-          <p>
-            <strong>Plan:</strong> {selectedPlan}
-          </p>
-          <p>
-            <strong>Amount:</strong> ₹{selectedPrice}
-          </p>
+          <p><strong>Name:</strong> {formData.name || "Not specified"}</p>
+          <p><strong>Email:</strong> {formData.email || "Not specified"}</p>
+          <p><strong>Plan:</strong> {selectedPlan}</p>
+          <p><strong>Amount:</strong> ₹{selectedPrice}</p>
         </div>
 
         <div className="summary-box">
           <h3>Pay by UPI</h3>
-          <p>
-            <strong>UPI ID:</strong> {UPI_ID}
-          </p>
-          <p>
-            <strong>Amount:</strong> ₹{selectedPrice}
-          </p>
+          <p><strong>UPI ID:</strong> {UPI_ID}</p>
+          <p><strong>Amount:</strong> ₹{selectedPrice}</p>
 
           <a
             className="primary-btn full-btn"
@@ -159,7 +161,6 @@ function PaymentPage({ formData, setPage }) {
 
         <div className="summary-box">
           <h3>Upload Payment Screenshot</h3>
-
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"

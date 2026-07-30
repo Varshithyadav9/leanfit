@@ -23,6 +23,9 @@ import EmailTemplates from "./components/EmailTemplates";
 import SmartCoach from "./components/SmartCoach";
 import Calculators from "./components/Calculators";
 import FeedbackPage from "./components/FeedbackPage";
+import ForgotPassword from "./components/ForgotPassword";
+import ProtectedPage from "./components/ProtectedPage";
+import { saveSession } from "./utils/auth";
 
 function App() {
   const [page, setPage] = useState("welcome");
@@ -52,9 +55,8 @@ function App() {
     selectedPrice: "",
   });
 
-  const saveCustomer = (customerData, token) => {
-    localStorage.setItem("leanfitToken", token);
-    localStorage.setItem("leanfitCustomer", JSON.stringify(customerData));
+  const saveCustomer = (customerData, token, remember = true) => {
+    saveSession(customerData, token, remember);
 
     setFormData((current) => ({
       ...current,
@@ -64,15 +66,15 @@ function App() {
     }));
   };
 
-  const handleRegistration = (customerData, token) => {
-    saveCustomer(customerData, token);
+  const handleRegistration = (customerData, token, remember = true) => {
+    saveCustomer(customerData, token, remember);
 
     // A newly-created customer should continue with the LeanFit form.
     setPage("profile");
   };
 
-  const handleLogin = (customerData, token) => {
-    saveCustomer(customerData, token);
+  const handleLogin = (customerData, token, remember = true) => {
+    saveCustomer(customerData, token, remember);
 
     // An existing customer should see their orders and membership.
     setPage("customer-portal");
@@ -100,13 +102,16 @@ function App() {
         />
       );
 
+    case "forgot-password":
+      return <ForgotPassword setPage={setPage} />;
+
     case "profile":
       return (
-        <BasicProfile
+        <ProtectedPage setPage={setPage}><BasicProfile
           formData={formData}
           setFormData={setFormData}
           setPage={setPage}
-        />
+        /></ProtectedPage>
       );
 
     case "goal":
@@ -147,11 +152,11 @@ function App() {
 
     case "payment":
       return (
-        <PaymentPage
+        <ProtectedPage setPage={setPage}><PaymentPage
           formData={formData}
           setPage={setPage}
           setGeneratedPlan={setGeneratedPlan}
-        />
+        /></ProtectedPage>
       );
 
     case "success":
@@ -165,18 +170,18 @@ function App() {
 
     case "dashboard":
       return (
-        <Dashboard
+        <ProtectedPage setPage={setPage}><Dashboard
           formData={formData}
           generatedPlan={generatedPlan}
           setPage={setPage}
-        />
+        /></ProtectedPage>
       );
 
     case "customer-auth":
       return <CustomerAuth setPage={setPage} />;
 
     case "customer-portal":
-      return <CustomerPortal setPage={setPage} />;
+      return <ProtectedPage setPage={setPage}><CustomerPortal setPage={setPage} /></ProtectedPage>;
 
     case "admin-login":
       return <AdminLogin setPage={setPage} />;
@@ -186,15 +191,15 @@ function App() {
     case "email-templates":
       return <EmailTemplates setPage={setPage} />;
     case "profile-settings":
-      return <Profile setPage={setPage} />;
+      return <ProtectedPage setPage={setPage}><Profile setPage={setPage} /></ProtectedPage>;
     case "settings":
-      return <Settings setPage={setPage} />;
+      return <ProtectedPage setPage={setPage}><Settings setPage={setPage} /></ProtectedPage>;
     case "smart-coach":
       return <SmartCoach formData={formData} setPage={setPage} />;
     case "calculators":
       return <Calculators setPage={setPage} />;
     case "feedback":
-      return <FeedbackPage setPage={setPage} mode="customer" />;
+      return <ProtectedPage setPage={setPage}><FeedbackPage setPage={setPage} mode="customer" /></ProtectedPage>;
     case "admin-feedback":
       return <FeedbackPage setPage={setPage} mode="admin" />;
     case "privacy":

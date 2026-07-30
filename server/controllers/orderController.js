@@ -177,6 +177,7 @@ export const getOrders = async (req, res) => {
 
 export const getCustomerOrders = async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-store");
     const email = String(req.params.email || "").toLowerCase().trim();
     const orders = await Order.find({ email }).sort({ createdAt: -1 });
     return res.json({ success: true, orders });
@@ -232,6 +233,11 @@ export const updateOrderStatus = async (req, res) => {
           success: false,
           message: "Verify the payment before marking the order delivered.",
         });
+      }
+
+      if (!order.pdfPath || order.pdfStatus !== "Generated") {
+        const userData = buildUserData(order);
+        await getOrCreatePdf(order, userData);
       }
 
       order.status = "Delivered";

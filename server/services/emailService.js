@@ -70,3 +70,17 @@ export const sendOrderEmail = async (userData, orderId, pdfBuffer) => {
 
   return result.data;
 };
+
+export const sendPasswordResetOtp = async (customer, otp) => {
+  const resend = getResendClient();
+  const from = process.env.EMAIL_FROM?.trim() || "LeanFit <onboarding@resend.dev>";
+  const result = await resend.emails.send({
+    from,
+    to: [customer.email],
+    subject: "LeanFit password reset code",
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033"><h2 style="color:#147a40">Reset your LeanFit password</h2><p>Hello ${customer.name || "Customer"},</p><p>Your six-digit verification code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${otp}</p><p>This code expires in 10 minutes. Do not share it with anyone.</p><p>If you did not request this, you can safely ignore this email.</p></div>`,
+  });
+  if (result?.error) throw new Error(result.error.message || "Email provider rejected the reset email.");
+  if (!result?.data?.id) throw new Error("Email provider did not return a delivery request ID.");
+  return result.data;
+};

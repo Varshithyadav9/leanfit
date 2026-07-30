@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import ProgressCharts from "./ProgressCharts";
 import Notifications from "./Notifications";
 
+const API_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
+
 function DashboardIcon({ name }) {
   const paths = {
     home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V21h13V10.5"/><path d="M9.5 21v-6h5v6"/></>,
@@ -15,6 +17,8 @@ function DashboardIcon({ name }) {
 
 function Dashboard({ formData, setPage }) {
   const [customer, setCustomer] = useState(null);
+  const [accessChecking, setAccessChecking] = useState(true);
+  const [accessError, setAccessError] = useState("");
   const [water, setWater] = useState(0);
   const [weight, setWeight] = useState("");
   const [mealPhotoPreview, setMealPhotoPreview] = useState(null);
@@ -53,22 +57,55 @@ function Dashboard({ formData, setPage }) {
   const fatGoal = 70;
 
   useEffect(() => {
-    const savedCustomer = localStorage.getItem("leanfitCustomer");
+    const verifyDashboardAccess = async () => {
+      const savedCustomer = localStorage.getItem("leanfitCustomer");
 
-    if (!savedCustomer) return;
+      if (!savedCustomer) {
+        setPage("customer-auth");
+        return;
+      }
 
-    const parsedCustomer = JSON.parse(savedCustomer);
-    setCustomer(parsedCustomer);
+      try {
+        const parsedCustomer = JSON.parse(savedCustomer);
+        setCustomer(parsedCustomer);
 
-    loadProgress(parsedCustomer.email);
-    loadHistory(parsedCustomer.email);
-    loadWeeklyReport(parsedCustomer.email);
+        const response = await fetch(
+          `${API_URL}/api/customer/orders/${encodeURIComponent(parsedCustomer.email)}`
+        );
+        const data = await response.json();
+        const accessibleOrder = (data.orders || []).find(
+          (order) => order.dashboardAccess && ["Verified", "Delivered"].includes(order.status)
+        );
+
+        if (!response.ok || !data.success || !accessibleOrder) {
+          localStorage.setItem(
+            "leanfitPortalNotice",
+            "Lean Pro Dashboard becomes available after admin payment verification."
+          );
+          setPage("customer-portal");
+          return;
+        }
+
+        localStorage.setItem("leanfitActiveOrder", JSON.stringify(accessibleOrder));
+        await Promise.all([
+          loadProgress(parsedCustomer.email),
+          loadHistory(parsedCustomer.email),
+          loadWeeklyReport(parsedCustomer.email),
+        ]);
+      } catch {
+        setAccessError("Unable to confirm dashboard access. Please try again.");
+      } finally {
+        setAccessChecking(false);
+      }
+    };
+
+    verifyDashboardAccess();
   }, []);
 
   const loadProgress = async (email) => {
     try {
       const response = await fetch(
-        `https://leanfit.onrender.com/api/progress/${email}/${today}`
+        `${API_URL}/api/progress/${email}/${today}`
       );
 
       const data = await response.json();
@@ -86,7 +123,7 @@ function Dashboard({ formData, setPage }) {
   const loadHistory = async (email) => {
     try {
       const response = await fetch(
-        `https://leanfit.onrender.com/api/progress/history/${email}`
+        `${API_URL}/api/progress/history/${email}`
       );
 
       const data = await response.json();
@@ -108,7 +145,7 @@ function Dashboard({ formData, setPage }) {
 
     try {
       const response = await fetch(
-        `https://leanfit.onrender.com/api/progress/weekly-report/${encodeURIComponent(
+        `${API_URL}/api/progress/weekly-report/${encodeURIComponent(
           email
         )}`
       );
@@ -142,7 +179,7 @@ function Dashboard({ formData, setPage }) {
     if (!customer?.email) return;
 
     try {
-      await fetch("https://leanfit.onrender.com/api/progress", {
+      await fetch(`${API_URL}/api/progress`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -210,7 +247,7 @@ function Dashboard({ formData, setPage }) {
       formData.append("mealPhoto", file);
 
       const response = await fetch(
-        "https://leanfit.onrender.com/api/food/upload",
+        `${API_URL}/api/food/upload`,
         {
           method: "POST",
           body: formData,
@@ -279,7 +316,7 @@ function Dashboard({ formData, setPage }) {
 
     try {
       const response = await fetch(
-        `https://leanfit.onrender.com/api/food/barcode/${cleanBarcode}`
+        `${API_URL}/api/food/barcode/${cleanBarcode}`
       );
       const data = await response.json();
 
@@ -361,7 +398,7 @@ function Dashboard({ formData, setPage }) {
 
     try {
       const response = await fetch(
-        "https://leanfit.onrender.com/api/food/voice",
+        `${API_URL}/api/food/voice`,
         {
           method: "POST",
           headers: {
@@ -488,6 +525,30 @@ function Dashboard({ formData, setPage }) {
     ...(water < 2 ? [{ id: `water-reminder-${today}`, title: "Hydration reminder", message: "You are below your daily water target. Add your next glass.", time: "Today", type: "warning" }] : []),
     ...(weeklyReport ? [{ id: `weekly-report-${today}`, title: "Weekly report ready", message: "Your latest progress summary is available in the dashboard.", time: "This week", type: "success" }] : []),
   ];
+
+  if (accessChecking) {
+    return (
+      <main className="page">
+        <section className="card">
+          <p>Checking dashboard access...</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (accessError) {
+    return (
+      <main className="page">
+        <section className="card">
+          <h2>Dashboard unavailable</h2>
+          <p className="error-text">{accessError}</p>
+          <button className="primary-btn" type="button" onClick={() => setPage("customer-portal")}>
+            Back to My Orders
+          </button>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="dashboard-page">

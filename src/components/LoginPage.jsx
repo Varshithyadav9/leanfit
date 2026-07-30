@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import PasswordInput from "./PasswordInput";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+
 const API_URL = (
   import.meta.env.VITE_API_URL || "https://leanfit.onrender.com"
 ).replace(/\/$/, "");
@@ -18,6 +20,7 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
     setMode(initialMode);
@@ -61,7 +64,7 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
       }
 
       showMessage("Login successful.", "success");
-      onAuthenticated(data.customer, data.token);
+      onAuthenticated(data.customer, data.token, rememberMe);
     } catch (error) {
       showMessage(error.message || "Unable to connect to the server.");
     } finally {
@@ -77,13 +80,18 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
       return;
     }
 
-    if (cleanMobile.length < 10) {
-      showMessage("Enter a valid mobile number.");
+    if (!EMAIL_RE.test(form.email.trim())) {
+      showMessage("Enter a valid email address.");
       return;
     }
 
-    if (form.password.length < 6) {
-      showMessage("Password must contain at least 6 characters.");
+    if (cleanMobile.length !== 10) {
+      showMessage("Enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    if (form.password.length < 8 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) {
+      showMessage("Password must be at least 8 characters and include a letter and number.");
       return;
     }
 
@@ -114,7 +122,7 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
       }
 
       showMessage("Account created successfully.", "success");
-      onAuthenticated(data.customer, data.token);
+      onAuthenticated(data.customer, data.token, true);
     } catch (error) {
       showMessage(error.message || "Unable to connect to the server.");
     } finally {
@@ -262,6 +270,13 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
                 onChange={updateField}
               />
             </div>
+
+            {mode === "login" && (
+              <div className="auth-inline-options">
+                <label className="remember-me"><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} /> Remember me</label>
+                <button className="auth-link-btn" type="button" onClick={() => setPage("forgot-password")}>Forgot Password?</button>
+              </div>
+            )}
 
             {mode === "register" && (
               <div>

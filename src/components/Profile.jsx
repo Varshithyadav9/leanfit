@@ -1,14 +1,11 @@
 import { useMemo, useState } from "react";
 import PasswordInput from "./PasswordInput";
+import { getStoredCustomer, getStoredToken } from "../utils/auth";
 
 const API_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
 
 function readCustomer() {
-  try {
-    return JSON.parse(localStorage.getItem("leanfitCustomer") || "null");
-  } catch {
-    return null;
-  }
+  return getStoredCustomer();
 }
 
 function readFitnessProfile() {
@@ -46,7 +43,7 @@ function Profile({ setPage }) {
   const [saving, setSaving] = useState("");
 
   const request = async (path, body) => {
-    const token = localStorage.getItem("leanfitToken");
+    const token = getStoredToken();
     const response = await fetch(`${API_URL}${path}`, {
       method: "PATCH",
       headers: {

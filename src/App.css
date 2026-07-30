@@ -1960,3 +1960,33 @@ body, button, input, select, textarea {
     width: 100%;
   }
 }
+
+/* Customer flow finalization */
+.payment-preview {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  margin-top: 16px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  background: #f8fafc;
+}
+
+.order-waiting-note {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* Authentication & security update */
+.auth-inline-options { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.remember-me { display:flex; align-items:center; gap:8px; margin:0; font-size:.92rem; cursor:pointer; }
+.remember-me input { width:16px; height:16px; margin:0; accent-color:#147a40; }
+.auth-link-btn { border:0; padding:0; background:transparent; color:#147a40; font:inherit; font-weight:700; cursor:pointer; }
+.auth-link-btn:hover { text-decoration:underline; }
+@media (max-width:520px) { .auth-inline-options { align-items:flex-start; flex-direction:column; gap:10px; } }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { clearSession } from "../utils/auth";
 import PageLoader from "./PageLoader";
 
 const API_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
@@ -42,14 +43,20 @@ function CustomerPortal({ setPage }) {
       const parsedCustomer = JSON.parse(savedCustomer);
       setCustomer(parsedCustomer);
       fetchOrders(parsedCustomer.email);
+
+      const refreshTimer = window.setInterval(() => {
+        fetchOrders(parsedCustomer.email, true, true);
+      }, 20000);
+
+      return () => window.clearInterval(refreshTimer);
     } catch {
       localStorage.removeItem("leanfitCustomer");
       setPage("customer-auth");
     }
   }, []);
 
-  const fetchOrders = async (email, isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
+  const fetchOrders = async (email, isRefresh = false, silent = false) => {
+    if (isRefresh && !silent) setRefreshing(true);
 
     try {
       const response = await fetch(
@@ -69,7 +76,7 @@ function CustomerPortal({ setPage }) {
     } catch {
       setMessage("Server error. Please try again.");
     } finally {
-      setRefreshing(false);
+      if (!silent) setRefreshing(false);
     }
   };
 
@@ -175,8 +182,28 @@ function CustomerPortal({ setPage }) {
                 )}
 
                 {canOpenDashboard && (
-                  <button className="secondary-btn" type="button" onClick={() => setPage("dashboard")}>
+                  <button
+                    className="secondary-btn"
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem("leanfitActiveOrder", JSON.stringify(order));
+                      setPage("dashboard");
+                    }}
+                  >
                     Open Lean Pro Dashboard
+                  </button>
+                )}
+
+                {order.status === "Delivered" && (
+                  <button
+                    className="secondary-btn"
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem("leanfitFeedbackOrder", JSON.stringify(order));
+                      setPage("feedback");
+                    }}
+                  >
+                    Give Feedback
                   </button>
                 )}
 
@@ -190,7 +217,6 @@ function CustomerPortal({ setPage }) {
       </section>
 
       <section className="customer-portal-footer-actions">
-        <button className="secondary-btn" type="button" onClick={() => setPage("feedback")}>Give Feedback</button>
         <button className="secondary-btn" type="button" onClick={() => setPage("profile-settings")}>
           Profile & Security
         </button>
