@@ -8,6 +8,8 @@ import { generateDietPlan } from "../services/geminiService.js";
 import { sendOrderEmail } from "../services/emailService.js";
 
 const ALLOWED_STATUSES = ["Pending", "Verified", "Rejected", "Delivered"];
+const LEAN_PRO_PLANS = ["Lean Pro Membership", "Lean Pro Renewal"];
+const LEAN_PRO_ACCESS_DAYS = 90;
 const SERVER_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
@@ -30,6 +32,77 @@ function buildUserData(order) {
 function resolveStoredPdfPath(pdfPath = "") {
   if (!pdfPath) return "";
   return path.resolve(SERVER_ROOT, pdfPath);
+}
+
+async function expireLeanProOrders(query = {}) {
+  await Order.updateMany(
+    {
+      ...query,
+      selectedPlan: { $in: LEAN_PRO_PLANS },
+      dashboardAccess: true,
+      accessEndDate: { $ne: null, $lte: new Date() },
+    },
+    {
+      $set: { dashboardAccess: false, membershipStatus: "Expired" },
+    }
+  );
+}
+
+async function applyLeanProRenewal(renewalOrder) {
+  const now = new Date();
+
+  let membershipOrder = null;
+
+  if (renewalOrder.renewalForOrderId) {
+    membershipOrder = await Order.findOne({
+      orderId: renewalOrder.renewalForOrderId,
+      email: renewalOrder.email,
+      selectedPlan: "Lean Pro Membership",
+    });
+  }
+
+  if (!membershipOrder) {
+    membershipOrder = await Order.findOne({
+      email: renewalOrder.email,
+      selectedPlan: "Lean Pro Membership",
+      paymentStatus: "Paid",
+    }).sort({ accessEndDate: -1, createdAt: -1 });
+  }
+
+  if (!membershipOrder) {
+    throw new Error(
+      "Original Lean Pro membership was not found for this renewal."
+    );
+  }
+
+  const currentEnd = membershipOrder.accessEndDate
+    ? new Date(membershipOrder.accessEndDate)
+    : null;
+  const baseDate =
+    currentEnd && currentEnd.getTime() > now.getTime() ? currentEnd : now;
+
+  membershipOrder.dashboardAccess = true;
+  membershipOrder.membershipStatus = "Active";
+  membershipOrder.accessStartDate ||= now;
+  membershipOrder.accessEndDate = new Date(
+    baseDate.getTime() + LEAN_PRO_ACCESS_DAYS * 24 * 60 * 60 * 1000
+  );
+  membershipOrder.renewalCount =
+    Number(membershipOrder.renewalCount || 0) + 1;
+  await membershipOrder.save();
+
+  renewalOrder.status = "Verified";
+  renewalOrder.paymentStatus = "Paid";
+  renewalOrder.dashboardAccess = false;
+  renewalOrder.membershipStatus = "Applied";
+  renewalOrder.accessStartDate = now;
+  renewalOrder.accessEndDate = membershipOrder.accessEndDate;
+  renewalOrder.pdfStatus = "Not Generated";
+  renewalOrder.pdfPath = "";
+  renewalOrder.generatedPlan = "";
+  await renewalOrder.save();
+
+  return membershipOrder;
 }
 
 async function getOrCreatePdf(order, userData, forceRegenerate = false) {
@@ -127,19 +200,38 @@ async function activateVerifiedOrder(order) {
   order.status = "Verified";
   order.paymentStatus = "Paid";
 
-  if (order.selectedPlan === "Lean Pro Membership") {
+  if (LEAN_PRO_PLANS.includes(order.selectedPlan)) {
+    const now = new Date();
+    const currentEnd = order.accessEndDate ? new Date(order.accessEndDate) : null;
+    const baseDate = currentEnd && currentEnd.getTime() > now.getTime() ? currentEnd : now;
+
     order.dashboardAccess = true;
     order.membershipStatus = "Active";
-    order.accessStartDate ||= new Date();
-    order.accessEndDate ||= new Date(
-      Date.now() + 30 * 24 * 60 * 60 * 1000
+    order.accessStartDate = now;
+    order.accessEndDate = new Date(
+      baseDate.getTime() + LEAN_PRO_ACCESS_DAYS * 24 * 60 * 60 * 1000
     );
+
+    if (order.selectedPlan === "Lean Pro Renewal") {
+      order.renewalCount = Number(order.renewalCount || 0) + 1;
+    }
   }
 
   await order.save();
 }
 
 async function prepareVerifiedOrder(order) {
+  if (order.selectedPlan === "Lean Pro Renewal") {
+    const membershipOrder = await applyLeanProRenewal(order);
+
+    return {
+      generated: false,
+      renewalApplied: true,
+      membershipOrderId: membershipOrder.orderId,
+      accessEndDate: membershipOrder.accessEndDate,
+    };
+  }
+
   await activateVerifiedOrder(order);
 
   const userData = buildUserData(order);
@@ -164,6 +256,7 @@ async function prepareVerifiedOrder(order) {
 
 export const getOrders = async (req, res) => {
   try {
+    await expireLeanProOrders();
     const orders = await Order.find().sort({ createdAt: -1 });
     return res.json({ success: true, orders });
   } catch (error) {
@@ -179,6 +272,7 @@ export const getCustomerOrders = async (req, res) => {
   try {
     res.setHeader("Cache-Control", "no-store");
     const email = String(req.params.email || "").toLowerCase().trim();
+    await expireLeanProOrders({ email });
     const orders = await Order.find({ email }).sort({ createdAt: -1 });
     return res.json({ success: true, orders });
   } catch (error) {
@@ -220,7 +314,7 @@ export const updateOrderStatus = async (req, res) => {
       order.paymentStatus = "Rejected";
       order.dashboardAccess = false;
 
-      if (order.selectedPlan === "Lean Pro Membership") {
+      if (LEAN_PRO_PLANS.includes(order.selectedPlan)) {
         order.membershipStatus = "Rejected";
         order.accessStartDate = null;
         order.accessEndDate = null;
@@ -228,6 +322,18 @@ export const updateOrderStatus = async (req, res) => {
 
       await order.save();
     } else if (status === "Delivered") {
+      if (order.selectedPlan === "Lean Pro Renewal") {
+        order.status = "Delivered";
+        await order.save();
+
+        return res.json({
+          success: true,
+          message: "Renewal order marked Delivered.",
+          order,
+          workflow: null,
+        });
+      }
+
       if (order.paymentStatus !== "Paid") {
         return res.status(400).json({
           success: false,
@@ -247,7 +353,7 @@ export const updateOrderStatus = async (req, res) => {
       order.paymentStatus = "Pending";
       order.dashboardAccess = false;
 
-      if (order.selectedPlan === "Lean Pro Membership") {
+      if (LEAN_PRO_PLANS.includes(order.selectedPlan)) {
         order.membershipStatus = "Pending";
         order.accessStartDate = null;
         order.accessEndDate = null;
@@ -259,7 +365,10 @@ export const updateOrderStatus = async (req, res) => {
     let message = `Order marked ${status}.`;
 
     if (status === "Verified") {
-      if (workflowResult?.generated) {
+      if (workflowResult?.renewalApplied) {
+        message =
+          "Renewal payment verified. Lean Pro access has been extended by 90 days.";
+      } else if (workflowResult?.generated) {
         message =
           "Payment verified and PDF generated. Download it and send it through WhatsApp.";
       } else {

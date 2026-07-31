@@ -6,6 +6,7 @@ const PLAN_PRICES = {
   "Workout Plan": 199,
   "Diet + Workout Plan": 349,
   "Lean Pro Membership": 449,
+  "Lean Pro Renewal": 99,
 };
 
 function createOrderId() {
@@ -82,6 +83,18 @@ export const submitManualPayment = async (req, res) => {
       existingPendingOrder.selectedPrice = selectedPrice;
       existingPendingOrder.paymentMethod = "Manual UPI";
       existingPendingOrder.paymentScreenshot = paymentScreenshot;
+      existingPendingOrder.renewalForOrderId =
+        userData.selectedPlan === "Lean Pro Renewal"
+          ? String(
+              userData.renewalForOrderId ||
+              existingPendingOrder.renewalForOrderId ||
+              ""
+            )
+          : "";
+      existingPendingOrder.membershipStatus =
+        userData.selectedPlan === "Lean Pro Renewal"
+          ? "Renewal Pending"
+          : existingPendingOrder.membershipStatus;
       existingPendingOrder.userData = {
         ...userData,
         selectedPrice,
@@ -97,7 +110,9 @@ export const submitManualPayment = async (req, res) => {
       });
     }
 
-    const isLeanPro = userData.selectedPlan === "Lean Pro Membership";
+    const isLeanPro = ["Lean Pro Membership", "Lean Pro Renewal"].includes(
+      userData.selectedPlan
+    );
 
     const savedOrder = await Order.create({
       orderId: createOrderId(),
@@ -119,7 +134,16 @@ export const submitManualPayment = async (req, res) => {
       dashboardAccess: false,
       accessStartDate: null,
       accessEndDate: null,
-      membershipStatus: isLeanPro ? "Pending" : "Not Applicable",
+      membershipStatus:
+        userData.selectedPlan === "Lean Pro Renewal"
+          ? "Renewal Pending"
+          : isLeanPro
+          ? "Pending"
+          : "Not Applicable",
+      renewalForOrderId:
+        userData.selectedPlan === "Lean Pro Renewal"
+          ? String(userData.renewalForOrderId || "")
+          : "",
       pdfPath: "",
       generatedPlan: "",
       userData: {

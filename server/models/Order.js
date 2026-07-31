@@ -30,6 +30,8 @@ const orderSchema = new mongoose.Schema(
     accessStartDate: Date,
     accessEndDate: Date,
     membershipStatus: { type: String, default: "Not Applicable" },
+    renewalForOrderId: { type: String, default: "" },
+    renewalCount: { type: Number, default: 0 },
     paymentScreenshot: { type: String, default: "" },
     pdfPath: { type: String, default: "" },
     pdfStatus: {

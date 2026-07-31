@@ -18,6 +18,7 @@ function Dashboard({ formData, setPage }) {
   const [customer, setCustomer] = useState(null);
   const [accessChecking, setAccessChecking] = useState(true);
   const [accessError, setAccessError] = useState("");
+  const [activeOrder, setActiveOrder] = useState(null);
   const [water, setWater] = useState(0);
   const [weight, setWeight] = useState("");
   const [mealPhotoPreview, setMealPhotoPreview] = useState(null);
@@ -72,19 +73,31 @@ function Dashboard({ formData, setPage }) {
           `${API_URL}/api/customer/orders/${encodeURIComponent(parsedCustomer.email)}`
         );
         const data = await response.json();
-        const accessibleOrder = (data.orders || []).find(
-          (order) => order.dashboardAccess && ["Verified", "Delivered"].includes(order.status)
-        );
+        const accessibleOrder = (data.orders || []).find((order) => {
+          if (!order.dashboardAccess || !["Verified", "Delivered"].includes(order.status)) return false;
+          if (!order.accessEndDate) return true;
+          return new Date(order.accessEndDate).getTime() > Date.now();
+        });
 
         if (!response.ok || !data.success || !accessibleOrder) {
+          const expiredOrder = (data.orders || []).find(
+            (order) =>
+              ["Lean Pro Membership", "Lean Pro Renewal"].includes(order.selectedPlan) &&
+              order.accessEndDate &&
+              new Date(order.accessEndDate).getTime() <= Date.now()
+          );
+
           localStorage.setItem(
             "leanfitPortalNotice",
-            "Lean Pro Dashboard becomes available after admin payment verification."
+            expiredOrder
+              ? "Your Lean Pro access has expired. Upgrade for ₹99 to reactivate it for 90 days."
+              : "Lean Pro Dashboard becomes available after admin payment verification."
           );
           setPage("customer-portal");
           return;
         }
 
+        setActiveOrder(accessibleOrder);
         localStorage.setItem("leanfitActiveOrder", JSON.stringify(accessibleOrder));
         await Promise.all([
           loadProgress(parsedCustomer.email),
@@ -513,6 +526,14 @@ function Dashboard({ formData, setPage }) {
     saveProgress(loggedMeals, water, weight);
   };
 
+  const membershipEndDate = activeOrder?.accessEndDate ? new Date(activeOrder.accessEndDate) : null;
+  const remainingDays = membershipEndDate
+    ? Math.max(0, Math.ceil((membershipEndDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+    : 90;
+  const formattedMembershipEnd = membershipEndDate
+    ? membershipEndDate.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })
+    : "90 days from activation";
+
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Good morning" : currentHour < 17 ? "Good afternoon" : "Good evening";
   const firstName = (customer?.name || formData.name || "Member").split(" ")[0];
@@ -552,7 +573,13 @@ function Dashboard({ formData, setPage }) {
 
           <div className="dashboard-access-pill">
             <span className="status-dot" />
-            Lean Pro active · 30-day access
+            Lean Pro active · {remainingDays} day{remainingDays === 1 ? "" : "s"} remaining
+          </div>
+
+          <div className="leanpro-membership-summary">
+            <div><span>Status</span><strong>Active</strong></div>
+            <div><span>Valid Until</span><strong>{formattedMembershipEnd}</strong></div>
+            <div><span>Remaining</span><strong>{remainingDays} Days</strong></div>
           </div>
         </div>
 

@@ -6,13 +6,27 @@ const API_BASE_URL = `${(
 const UPI_ID = "varshith0409@axl";
 
 function PaymentPage({ formData, setPage, setSubmittedOrder }) {
+  const renewalData = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("leanfitRenewalPlan") || "null");
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const paymentData =
+    renewalData?.selectedPlan === "Lean Pro Renewal"
+      ? { ...formData, ...renewalData }
+      : formData;
+
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const selectedPlan = formData.selectedPlan || "No plan selected";
-  const selectedPrice = Number(formData.selectedPrice || 0);
+  const selectedPlan = paymentData.selectedPlan || "No plan selected";
+  const selectedPrice = Number(paymentData.selectedPrice || 0);
+  const isRenewal = selectedPlan === "Lean Pro Renewal";
 
   const upiLink = useMemo(() => {
     const params = new URLSearchParams({
@@ -57,12 +71,12 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
   };
 
   const submitPayment = async () => {
-    if (!formData.selectedPlan || selectedPrice <= 0) {
+    if (!paymentData.selectedPlan || selectedPrice <= 0) {
       setError("Please select a plan first.");
       return;
     }
 
-    if (!formData.name || !formData.email) {
+    if (!paymentData.name || !paymentData.email) {
       setError("Name and email are required.");
       return;
     }
@@ -78,7 +92,7 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
     try {
       const payload = new FormData();
       payload.append("paymentScreenshot", paymentScreenshot);
-      payload.append("userData", JSON.stringify(formData));
+      payload.append("userData", JSON.stringify(paymentData));
 
       const response = await fetch(`${API_BASE_URL}/manual-payment/submit`, {
         method: "POST",
@@ -94,15 +108,17 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
       const orderDetails = {
         orderId: data.orderId,
         status: data.status || "Pending",
-        name: formData.name,
-        email: formData.email,
-        mobile: formData.mobile || "",
+        name: paymentData.name,
+        email: paymentData.email,
+        mobile: paymentData.mobile || "",
         selectedPlan,
         selectedPrice,
         submittedAt: new Date().toISOString(),
       };
 
       localStorage.setItem("leanfitLastSubmittedOrder", JSON.stringify(orderDetails));
+      localStorage.removeItem("leanfitRenewalPlan");
+      localStorage.removeItem("leanfitSelectedPlan");
       setSubmittedOrder?.(orderDetails);
       setPage("success");
     } catch (submitError) {
@@ -119,10 +135,11 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
     <main className="page">
       <section className="card">
         <p className="brand-label">UPI PAYMENT</p>
-        <h2>Complete Your Order</h2>
+        <h2>{isRenewal ? "Renew Lean Pro Membership" : "Complete Your Order"}</h2>
         <p className="muted">
-          Pay using PhonePe, Google Pay, Paytm or any UPI app, then upload the
-          payment screenshot for verification.
+          {isRenewal
+            ? "Pay ₹99 to renew Lean Pro for another 90 days, then upload the payment screenshot for admin verification."
+            : "Pay using PhonePe, Google Pay, Paytm or any UPI app, then upload the payment screenshot for verification."}
         </p>
 
         <div className="selected-plan-box">
@@ -133,8 +150,8 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
 
         <div className="summary-box">
           <h3>Order Summary</h3>
-          <p><strong>Name:</strong> {formData.name || "Not specified"}</p>
-          <p><strong>Email:</strong> {formData.email || "Not specified"}</p>
+          <p><strong>Name:</strong> {paymentData.name || "Not specified"}</p>
+          <p><strong>Email:</strong> {paymentData.email || "Not specified"}</p>
           <p><strong>Plan:</strong> {selectedPlan}</p>
           <p><strong>Amount:</strong> ₹{selectedPrice}</p>
         </div>
@@ -199,10 +216,10 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
           <button
             className="text-btn"
             type="button"
-            onClick={() => setPage("plans")}
+            onClick={() => setPage(isRenewal ? "customer-portal" : "plans")}
             disabled={submitting}
           >
-            Previous
+            {isRenewal ? "Back to My Orders" : "Previous"}
           </button>
         </div>
       </section>

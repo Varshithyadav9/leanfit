@@ -5,6 +5,7 @@ import PageLoader from "./PageLoader";
 const API_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
 
 const STATUS_STEPS = ["Received", "Verified", "Ready", "Delivered"];
+const RENEWAL_WARNING_DAYS = 15;
 
 function statusProgress(order) {
   if (order.status === "Rejected") return -1;
@@ -30,6 +31,7 @@ function CustomerPortal({ setPage }) {
   const [orders, setOrders] = useState([]);
   const [message, setMessage] = useState("Loading your orders...");
   const [refreshing, setRefreshing] = useState(false);
+  const [portalNotice, setPortalNotice] = useState("");
 
   useEffect(() => {
     const savedCustomer = localStorage.getItem("leanfitCustomer");
@@ -42,6 +44,11 @@ function CustomerPortal({ setPage }) {
     try {
       const parsedCustomer = JSON.parse(savedCustomer);
       setCustomer(parsedCustomer);
+      const savedNotice = localStorage.getItem("leanfitPortalNotice");
+      if (savedNotice) {
+        setPortalNotice(savedNotice);
+        localStorage.removeItem("leanfitPortalNotice");
+      }
       fetchOrders(parsedCustomer.email);
 
       const refreshTimer = window.setInterval(() => {
@@ -86,6 +93,57 @@ function CustomerPortal({ setPage }) {
     delivered: orders.filter((order) => order.status === "Delivered").length,
   }), [orders]);
 
+  const hasPendingRenewal = (membershipOrder) =>
+    orders.some(
+      (order) =>
+        order.selectedPlan === "Lean Pro Renewal" &&
+        order.status === "Pending" &&
+        order.paymentStatus === "Pending" &&
+        (
+          order.renewalForOrderId === membershipOrder.orderId ||
+          (!order.renewalForOrderId && order.email === membershipOrder.email)
+        )
+    );
+
+  const getMembershipInfo = (order) => {
+    const endDate = order.accessEndDate ? new Date(order.accessEndDate) : null;
+    const expired = Boolean(endDate && endDate.getTime() <= Date.now());
+    const remainingDays = endDate
+      ? Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+      : 0;
+
+    return {
+      expired,
+      remainingDays,
+      validUntil: endDate
+        ? endDate.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })
+        : "Not available",
+    };
+  };
+
+  const startRenewal = (order) => {
+    if (hasPendingRenewal(order)) {
+      setPortalNotice(
+        "Your ₹99 renewal payment is already awaiting admin verification."
+      );
+      return;
+    }
+
+    const renewalData = {
+      selectedPlan: "Lean Pro Renewal",
+      selectedPrice: 99,
+      goal: order.goal,
+      name: customer?.name || order.name,
+      email: customer?.email || order.email,
+      mobile: customer?.mobile || order.mobile,
+      renewalForOrderId: order.orderId,
+    };
+
+    localStorage.setItem("leanfitRenewalPlan", JSON.stringify(renewalData));
+    localStorage.setItem("leanfitSelectedPlan", JSON.stringify(renewalData));
+    setPage("payment");
+  };
+
   const logout = () => {
     localStorage.removeItem("leanfitCustomer");
     localStorage.removeItem("leanfitToken");
@@ -127,13 +185,35 @@ function CustomerPortal({ setPage }) {
         <article><span>Delivered</span><strong>{stats.delivered}</strong></article>
       </section>
 
+      {portalNotice && <p className="portal-message">{portalNotice}</p>}
       {message && <p className="portal-message">{message}</p>}
 
       <section className="customer-orders-list">
         {orders.map((order) => {
           const progress = statusProgress(order);
-          const canDownload = order.pdfPath && ["Verified", "Delivered"].includes(order.status);
-          const canOpenDashboard = order.dashboardAccess && ["Verified", "Delivered"].includes(order.status);
+          const isRenewalOrder = order.selectedPlan === "Lean Pro Renewal";
+          const canDownload =
+            !isRenewalOrder &&
+            order.pdfPath &&
+            ["Verified", "Delivered"].includes(order.status);
+          const isLeanPro = ["Lean Pro Membership", "Lean Pro Renewal"].includes(order.selectedPlan);
+          const membership = getMembershipInfo(order);
+          const canOpenDashboard =
+            !isRenewalOrder &&
+            order.dashboardAccess &&
+            ["Verified", "Delivered"].includes(order.status) &&
+            !membership.expired;
+          const renewalPending =
+            order.selectedPlan === "Lean Pro Membership" &&
+            hasPendingRenewal(order);
+          const showRenewal =
+            order.selectedPlan === "Lean Pro Membership" &&
+            ["Verified", "Delivered"].includes(order.status) &&
+            (
+              membership.expired ||
+              (membership.remainingDays > 0 &&
+                membership.remainingDays <= RENEWAL_WARNING_DAYS)
+            );
 
           return (
             <article className="customer-order-card" key={order._id || order.orderId}>
@@ -170,9 +250,32 @@ function CustomerPortal({ setPage }) {
               <div className="customer-order-details">
                 <p><span>Order ID</span><strong>{order.orderId}</strong></p>
                 <p><span>Payment</span><strong>{order.paymentStatus || "Pending"}</strong></p>
-                <p><span>Membership</span><strong>{order.membershipStatus || "Not Applicable"}</strong></p>
+                <p><span>Membership</span><strong>{membership.expired ? "Expired" : order.membershipStatus || "Not Applicable"}</strong></p>
                 <p><span>Delivery</span><strong>WhatsApp / Manual</strong></p>
               </div>
+
+              {isLeanPro && ["Verified", "Delivered"].includes(order.status) && (
+                <div className="leanpro-membership-card">
+                  <div><span>Status</span><strong>{membership.expired ? "Expired" : "Active"}</strong></div>
+                  <div><span>Valid Until</span><strong>{membership.validUntil}</strong></div>
+                  <div><span>Remaining</span><strong>{membership.expired ? "0 Days" : `${membership.remainingDays} Days`}</strong></div>
+                </div>
+              )}
+
+              {showRenewal && (
+                <div className={membership.expired ? "order-rejected-note" : "portal-message"}>
+                  <strong>
+                    {membership.expired
+                      ? "Your Lean Pro membership has expired."
+                      : `Your Lean Pro membership expires in ${membership.remainingDays} day${membership.remainingDays === 1 ? "" : "s"}.`}
+                  </strong>
+                  <p>
+                    {renewalPending
+                      ? "Your ₹99 renewal request is awaiting admin verification."
+                      : "Renew for ₹99 to receive another 90 days of Lean Pro access."}
+                  </p>
+                </div>
+              )}
 
               <div className="customer-order-actions">
                 {canDownload && (
@@ -192,6 +295,22 @@ function CustomerPortal({ setPage }) {
                   >
                     Open Lean Pro Dashboard
                   </button>
+                )}
+
+                {showRenewal && !renewalPending && (
+                  <button
+                    className="primary-btn"
+                    type="button"
+                    onClick={() => startRenewal(order)}
+                  >
+                    Renew Membership - ₹99 / 90 Days
+                  </button>
+                )}
+
+                {showRenewal && renewalPending && (
+                  <span className="order-waiting-note">
+                    Renewal payment awaiting admin verification.
+                  </span>
                 )}
 
                 {order.status === "Delivered" && (
