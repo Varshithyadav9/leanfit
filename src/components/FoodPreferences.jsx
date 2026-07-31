@@ -1,4 +1,8 @@
+import { useState } from "react";
+
 function FoodPreferences({ formData, setFormData, setPage }) {
+  const [message, setMessage] = useState("");
+
   const groups = [
     {
       title: "Protein Sources",
@@ -18,7 +22,10 @@ function FoodPreferences({ formData, setFormData, setPage }) {
     },
   ];
 
+  const allFoods = groups.flatMap((group) => group.foods);
+
   const updateFood = (food, value) => {
+    setMessage("");
     setFormData({
       ...formData,
       foods: {
@@ -26,6 +33,17 @@ function FoodPreferences({ formData, setFormData, setPage }) {
         [food]: value,
       },
     });
+  };
+
+  const continueToHabits = () => {
+    const missing = allFoods.some((food) => !formData.foods?.[food]);
+
+    if (missing) {
+      setMessage("Select Preferred, Acceptable, or Avoid for every food.");
+      return;
+    }
+
+    setPage("habits");
   };
 
   return (
@@ -66,12 +84,14 @@ function FoodPreferences({ formData, setFormData, setPage }) {
           </div>
         ))}
 
+        {message && <p className="form-message error">{message}</p>}
+
         <div className="page-actions">
-          <button className="text-btn" onClick={() => setPage("goal")}>
+          <button className="text-btn" type="button" onClick={() => setPage("goal")}>
             Previous
           </button>
 
-          <button className="primary-btn" onClick={() => setPage("habits")}>
+          <button className="primary-btn" type="button" onClick={continueToHabits}>
             Continue
           </button>
         </div>

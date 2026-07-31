@@ -1,6 +1,35 @@
+import { useState } from "react";
+
 function BasicProfile({ formData, setFormData, setPage }) {
+  const [message, setMessage] = useState("");
+
   const updateField = (field, value) => {
+    setMessage("");
     setFormData({ ...formData, [field]: value });
+  };
+
+  const continueToGoal = () => {
+    const requiredFields = [
+      "age",
+      "gender",
+      "height",
+      "weight",
+      "targetWeight",
+      "activityLevel",
+      "experience",
+      "location",
+    ];
+
+    const missing = requiredFields.some(
+      (field) => !String(formData[field] || "").trim()
+    );
+
+    if (missing) {
+      setMessage("Complete all required fields.");
+      return;
+    }
+
+    setPage("goal");
   };
 
   return (
@@ -14,7 +43,7 @@ function BasicProfile({ formData, setFormData, setPage }) {
 
         <div className="form-grid two-col">
           <div>
-            <label>Age</label>
+            <label>Age *</label>
             <input
               type="number"
               placeholder="Example: 22"
@@ -24,7 +53,7 @@ function BasicProfile({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Gender</label>
+            <label>Gender *</label>
             <select
               value={formData.gender}
               onChange={(e) => updateField("gender", e.target.value)}
@@ -36,7 +65,7 @@ function BasicProfile({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Height (cm)</label>
+            <label>Height (cm) *</label>
             <input
               type="number"
               placeholder="Example: 175"
@@ -46,7 +75,7 @@ function BasicProfile({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Current Weight (kg)</label>
+            <label>Current Weight (kg) *</label>
             <input
               type="number"
               placeholder="Example: 60"
@@ -56,7 +85,7 @@ function BasicProfile({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Target Weight (kg)</label>
+            <label>Target Weight (kg) *</label>
             <input
               type="number"
               placeholder="Example: 70"
@@ -66,7 +95,7 @@ function BasicProfile({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Activity Level</label>
+            <label>Activity Level *</label>
             <select
               value={formData.activityLevel}
               onChange={(e) => updateField("activityLevel", e.target.value)}
@@ -80,7 +109,7 @@ function BasicProfile({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Workout Experience</label>
+            <label>Workout Experience *</label>
             <select
               value={formData.experience}
               onChange={(e) => updateField("experience", e.target.value)}
@@ -93,7 +122,7 @@ function BasicProfile({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Country / State</label>
+            <label>Country / State *</label>
             <input
               type="text"
               placeholder="Example: India, Telangana"
@@ -103,12 +132,14 @@ function BasicProfile({ formData, setFormData, setPage }) {
           </div>
         </div>
 
+        {message && <p className="form-message error">{message}</p>}
+
         <div className="page-actions">
-          <button className="text-btn" onClick={() => setPage("login")}>
+          <button className="text-btn" type="button" onClick={() => setPage("login")}>
             Back
           </button>
 
-          <button className="primary-btn" onClick={() => setPage("goal")}>
+          <button className="primary-btn" type="button" onClick={continueToGoal}>
             Continue
           </button>
         </div>

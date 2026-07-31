@@ -9,17 +9,25 @@ function HabitsPage({ formData, setFormData, setPage }) {
   };
 
   const continueToPlans = () => {
-    const requiredWorkoutFields = [
+    const requiredFields = [
+      "smoking",
+      "alcohol",
+      "sleep",
+      "stress",
+      "workoutTime",
+      "waterIntake",
       "workoutDays",
       "workoutLocation",
       "workoutDuration",
       "trainingStyle",
     ];
 
-    const missing = requiredWorkoutFields.some((field) => !formData[field]);
+    const missing = requiredFields.some(
+      (field) => !String(formData[field] || "").trim()
+    );
 
     if (missing) {
-      setMessage("Complete the workout preferences before continuing.");
+      setMessage("Complete all required fields before continuing.");
       return;
     }
 
@@ -38,7 +46,7 @@ function HabitsPage({ formData, setFormData, setPage }) {
         <h3 className="form-section-title">Lifestyle</h3>
         <div className="form-grid two-col">
           <div>
-            <label>Smoking</label>
+            <label>Smoking *</label>
             <select value={formData.smoking || ""} onChange={(e) => updateField("smoking", e.target.value)}>
               <option value="">Select</option>
               <option>No</option>
@@ -48,7 +56,7 @@ function HabitsPage({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Alcohol</label>
+            <label>Alcohol *</label>
             <select value={formData.alcohol || ""} onChange={(e) => updateField("alcohol", e.target.value)}>
               <option value="">Select</option>
               <option>No</option>
@@ -58,7 +66,7 @@ function HabitsPage({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Sleep Duration</label>
+            <label>Sleep Duration *</label>
             <select value={formData.sleep || ""} onChange={(e) => updateField("sleep", e.target.value)}>
               <option value="">Select</option>
               <option>Less than 6 hours</option>
@@ -69,7 +77,7 @@ function HabitsPage({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Stress Level</label>
+            <label>Stress Level *</label>
             <select value={formData.stress || ""} onChange={(e) => updateField("stress", e.target.value)}>
               <option value="">Select</option>
               <option>Low</option>
@@ -79,7 +87,7 @@ function HabitsPage({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Preferred Workout Time</label>
+            <label>Preferred Workout Time *</label>
             <select value={formData.workoutTime || ""} onChange={(e) => updateField("workoutTime", e.target.value)}>
               <option value="">Select</option>
               <option>Morning</option>
@@ -90,7 +98,7 @@ function HabitsPage({ formData, setFormData, setPage }) {
           </div>
 
           <div>
-            <label>Water Intake</label>
+            <label>Water Intake *</label>
             <select value={formData.waterIntake || ""} onChange={(e) => updateField("waterIntake", e.target.value)}>
               <option value="">Select</option>
               <option>Less than 2L</option>
