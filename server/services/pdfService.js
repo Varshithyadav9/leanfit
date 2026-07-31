@@ -1146,7 +1146,7 @@ function drawWorkoutPairPage(doc, sessions, orderId, page, total) {
   addFooter(doc, page, total);
 }
 
-function drawWorkoutRecoveryPagefunction drawWorkoutRecoveryPage(doc, userData, orderId, page, total, workoutPlan) {
+function drawWorkoutRecoveryPage(doc, userData, orderId, page, total, workoutPlan) {
   addHeader(doc, "Workout Guidance & Recovery", orderId);
 
   let y = 115;
@@ -1209,7 +1209,7 @@ function drawWorkoutRecoveryPagefunction drawWorkoutRecoveryPage(doc, userData, 
   addFooter(doc, page, total);
 }
 
-function drawRecoveryPagefunction drawRecoveryPage(doc, orderId, page, total) {
+function drawRecoveryPage(doc, orderId, page, total) {
   addHeader(doc, "Recovery & Progress Checklist", orderId);
 
   let y = 115;
