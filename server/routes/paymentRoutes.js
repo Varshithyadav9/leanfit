@@ -1,29 +1,12 @@
-import fs from "fs";
-import path from "path";
 import express from "express";
 import multer from "multer";
 
 import { submitManualPayment } from "../controllers/paymentController.js";
 
 const router = express.Router();
-const uploadDirectory = path.resolve("uploads");
-
-fs.mkdirSync(uploadDirectory, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, uploadDirectory);
-  },
-  filename(req, file, cb) {
-    const safeName = String(file.originalname || "payment")
-      .replace(/[^a-zA-Z0-9._-]/g, "_");
-
-    cb(null, `${Date.now()}-${safeName}`);
-  },
-});
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024,
   },

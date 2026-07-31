@@ -1,4 +1,5 @@
 import Order from "../models/Order.js";
+import { uploadPaymentScreenshot } from "../config/cloudinary.js";
 
 const PLAN_PRICES = {
   "Diet Plan": 199,
@@ -47,9 +48,6 @@ function validateUserData(userData) {
   return selectedPrice;
 }
 
-function screenshotPath(file) {
-  return `uploads/${file.filename}`.replace(/\\/g, "/");
-}
 
 export const submitManualPayment = async (req, res) => {
   try {
@@ -64,7 +62,9 @@ export const submitManualPayment = async (req, res) => {
     }
 
     const email = String(userData.email).toLowerCase().trim();
-    const paymentScreenshot = screenshotPath(req.file);
+
+    const uploadedScreenshot = await uploadPaymentScreenshot(req.file);
+    const paymentScreenshot = uploadedScreenshot.url;
 
     const existingPendingOrder = await Order.findOne({
       email,
