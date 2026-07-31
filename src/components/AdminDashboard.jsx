@@ -9,6 +9,15 @@ function fileUrl(filePath = "") {
 
   const normalized = String(filePath).replace(/\\/g, "/");
 
+  // Cloudinary (or any full URL)
+  if (
+    normalized.startsWith("http://") ||
+    normalized.startsWith("https://")
+  ) {
+    return normalized;
+  }
+
+  // Local uploads
   return `${API_BASE_URL}/${normalized.replace(/^\/+/, "")}`;
 }
 
