@@ -593,6 +593,9 @@ function Dashboard({ formData, setPage }) {
           <button className="secondary-btn" onClick={() => setPage("customer-portal")}>
             My Orders
           </button>
+          <button className="secondary-btn" onClick={() => setPage("customer-portal")}>
+          Back to Portal
+          </button>
         </div>
       </section>
 
