@@ -29,7 +29,7 @@ function WelcomePage({ setPage }) {
           <div className="hero-actions">
             <button className="primary-btn" type="button" onClick={() => setPage("register")}>Get My Plan</button>
             <button className="secondary-btn light" type="button" onClick={() => setPage("login")}>Customer Login</button>
-            <button className="secondary-btn light calculator-hero-btn" type="button" onClick={() => setPage("calculators")}>Calculators</button>
+            <button className="secondary-btn light" type="button" onClick={() => setPage("calculators")}>Free Calculator</button>
           </div>
         </div>
 
@@ -68,43 +68,6 @@ function WelcomePage({ setPage }) {
         <div><strong>Simple</strong><span>Clear steps without unnecessary complexity.</span></div>
         <div><strong>Affordable</strong><span>Practical plans designed for everyday life.</span></div>
         <div><strong>Personalized</strong><span>Guidance shaped around your goals and preferences.</span></div>
-      </section>
-
-
-      <section className="welcome-tools-section">
-        <div className="welcome-tools-copy">
-          <p className="section-kicker">FREE FITNESS TOOLS</p>
-          <h2>Check your starting numbers in seconds.</h2>
-          <p>
-            Estimate your BMI, daily calories, protein target and water intake before choosing your personalized LeanFit plan.
-          </p>
-          <button className="primary-btn" type="button" onClick={() => setPage("calculators")}>
-            Open Free Calculators
-          </button>
-        </div>
-
-        <div className="welcome-tools-grid" aria-label="LeanFit free calculators">
-          <article>
-            <span>BMI</span>
-            <h3>BMI Calculator</h3>
-            <p>Check your body mass index using height and weight.</p>
-          </article>
-          <article>
-            <span>CALORIES</span>
-            <h3>Daily Calories</h3>
-            <p>Estimate maintenance and goal-based calorie needs.</p>
-          </article>
-          <article>
-            <span>PROTEIN</span>
-            <h3>Protein Target</h3>
-            <p>Get a practical daily protein estimate for your goal.</p>
-          </article>
-          <article>
-            <span>WATER</span>
-            <h3>Water Intake</h3>
-            <p>Estimate your everyday hydration target.</p>
-          </article>
-        </div>
       </section>
 
       <footer className="compact-footer">
