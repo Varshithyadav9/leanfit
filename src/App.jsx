@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./App.css";
 
 import WelcomePage from "./components/WelcomePage";
@@ -26,9 +27,41 @@ import FeedbackPage from "./components/FeedbackPage";
 import ForgotPassword from "./components/ForgotPassword";
 import ProtectedPage from "./components/ProtectedPage";
 import { saveSession } from "./utils/auth";
+const PUBLIC_PAGE_PATHS = {
+  about: "/about",
+  contact: "/contact",
+  calculators: "/calculators",
+  privacy: "/privacy",
+  terms: "/terms",
+};
 
+const PATH_TO_PUBLIC_PAGE = {
+  "/about": "about",
+  "/contact": "contact",
+  "/calculators": "calculators",
+  "/privacy": "privacy",
+  "/terms": "terms",
+};
 function App() {
-  const [page, setPage] = useState("welcome");
+  const [page, setPageState] = useState("welcome");
+
+const navigate = useNavigate();
+const location = useLocation();
+
+const setPage = (nextPage) => {
+  const publicPath = PUBLIC_PAGE_PATHS[nextPage];
+
+  if (publicPath) {
+    navigate(publicPath);
+    return;
+  }
+
+  setPageState(nextPage);
+
+  if (location.pathname !== "/") {
+    navigate("/");
+  }
+};
   const [generatedPlan, setGeneratedPlan] = useState("");
 
   const [formData, setFormData] = useState({
@@ -79,7 +112,24 @@ function App() {
     // An existing customer should see their orders and membership.
     setPage("customer-portal");
   };
+const publicPage = PATH_TO_PUBLIC_PAGE[location.pathname];
 
+if (publicPage === "calculators") {
+  return <Calculators setPage={setPage} />;
+}
+
+if (
+  publicPage === "about" ||
+  publicPage === "contact" ||
+  publicPage === "privacy" ||
+  publicPage === "terms"
+) {
+  return <InfoPage type={publicPage} setPage={setPage} />;
+}
+
+if (location.pathname !== "/") {
+  return <NotFoundPage setPage={setPage} />;
+}
   switch (page) {
     case "welcome":
       return <WelcomePage setPage={setPage} />;

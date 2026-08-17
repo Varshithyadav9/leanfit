@@ -2080,3 +2080,110 @@ body, button, input, select, textarea {
     grid-column: auto;
   }
 }
+
+
+/* =========================================================
+   WELCOME PAGE — calculator shortcut + mobile navigation fix
+   ========================================================= */
+.calculator-hero-btn {
+  white-space: nowrap;
+}
+
+/* Keep the important navigation options visible on phones. */
+@media (max-width: 760px) {
+  .compact-topbar {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .compact-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .compact-nav button,
+  .compact-nav button:first-child,
+  .compact-nav button:nth-child(2) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .compact-nav button {
+    min-height: 34px;
+    padding: 7px 8px;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .welcome-logo {
+    width: 86px;
+  }
+
+  /* The calculator is now available directly in the hero,
+     so avoid the very tall calculator promo on mobile. */
+  .welcome-tools-section {
+    display: none;
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .hero-actions button {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 7px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 430px) {
+  .compact-welcome {
+    width: calc(100% - 14px);
+  }
+
+  .compact-topbar {
+    padding-inline: 0;
+  }
+
+  .welcome-logo {
+    width: 78px;
+  }
+
+  .compact-nav {
+    gap: 2px;
+  }
+
+  .compact-nav button {
+    padding: 6px 5px;
+    font-size: 8px;
+  }
+
+  .compact-hero {
+    padding: 28px 18px;
+  }
+
+  .compact-hero h1 {
+    font-size: 35px;
+    line-height: 1.04;
+  }
+
+  .compact-hero .hero-text {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hero-actions button {
+    padding: 10px 4px;
+    font-size: 10px;
+  }
+}

@@ -1,15 +1,7 @@
-LeanFit Calculator Welcome Update
+Replace only the included files.
 
-Replace these files in your frontend:
-- src/components/WelcomePage.jsx
-- src/components/Calculators.jsx
-- src/App.css
+Important: the Upgrade Lean Pro - ₹99 button opens your existing payment page and stores:
+- leanfitRenewalPlan
+- leanfitSelectedPlan
 
-App.jsx is included only for reference. Your current App.jsx already imports Calculators and contains the calculators page case.
-
-Test:
-1. Run npm run dev
-2. Open the Welcome Page
-3. Click Open Free Calculators
-4. Change weight, height, age, activity and goal
-5. Test Back to Home and Get My Plan
+Your PaymentPage should read one of these keys to prefill Lean Pro Renewal / ₹99.

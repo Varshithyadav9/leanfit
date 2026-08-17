@@ -4,9 +4,12 @@ function WelcomePage({ setPage }) {
   return (
     <main className="welcome-page compact-welcome">
       <header className="topbar compact-topbar">
-        <button className="brand-button" type="button" onClick={() => setPage("welcome")} aria-label="LeanFit home">
-          <img src="/leanfit-logo.png" alt="LeanFit" className="welcome-logo" />
-        </button>
+        <div className="welcome-brand-block">
+          <button className="brand-button" type="button" onClick={() => setPage("welcome")} aria-label="LeanFit home">
+            <img src="/leanfit-logo.png" alt="LeanFit" className="welcome-logo" />
+          </button>
+          <span className="welcome-brand-author">BY VARSHITH</span>
+        </div>
 
         <nav className="compact-nav" aria-label="Main navigation">
           <button type="button" onClick={() => openInfo("about")}>About</button>
@@ -26,6 +29,7 @@ function WelcomePage({ setPage }) {
           <div className="hero-actions">
             <button className="primary-btn" type="button" onClick={() => setPage("register")}>Get My Plan</button>
             <button className="secondary-btn light" type="button" onClick={() => setPage("login")}>Customer Login</button>
+            <button className="secondary-btn light calculator-hero-btn" type="button" onClick={() => setPage("calculators")}>Calculators</button>
           </div>
         </div>
 
