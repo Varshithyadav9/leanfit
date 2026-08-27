@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ProgressCharts from "./ProgressCharts";
+import HelpButton from "./HelpButton";
 
 const API_URL = (import.meta.env.VITE_API_URL || "https://leanfit.onrender.com").replace(/\/$/, "");
 
@@ -584,6 +585,7 @@ function Dashboard({ formData, setPage }) {
         </div>
 
         <div className="dashboard-header-actions">
+          <HelpButton variant="light" />
           <button className="secondary-btn" onClick={() => scrollToSection("food-tracker")}>
             Log a Meal
           </button>
