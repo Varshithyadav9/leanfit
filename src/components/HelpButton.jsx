@@ -1,60 +1,50 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const INSTAGRAM_URL = "https://www.instagram.com/lean_varshith/";
 const INSTAGRAM_HANDLE = "@lean_varshith";
 // Add your phone/WhatsApp number here when you want it shown to customers.
 const SUPPORT_PHONE = "";
 
-const FAQS = [
-  {
-    title: "Payment & UPI",
-    body: "Choose your plan, pay through the displayed UPI option, then upload the payment screenshot. Your order stays pending until admin verification.",
-  },
-  {
-    title: "Lean Pro access",
-    body: "Lean Pro access is time-limited. Your dashboard shows the current status, expiry date and remaining days. After expiry, renewal is required.",
-  },
-  {
-    title: "₹99 renewal",
-    body: "The ₹99 Lean Pro renewal appears in the Customer Portal when your membership is close to expiry or has expired. After payment, upload the screenshot and wait for admin approval.",
-  },
-  {
-    title: "Orders & PDFs",
-    body: "Open Customer Portal to check order status and access completed plans. If an order is still pending, wait for admin verification.",
-  },
-  {
-    title: "Login problem",
-    body: "Use the same email ID or mobile number used during registration. If you still cannot log in, contact LeanFit support.",
-  },
+const QUICK_QUESTIONS = [
+  "How do I make a payment?",
+  "How does Lean Pro work?",
+  "How do I renew for ₹99?",
+  "Where is my order/PDF?",
 ];
 
 function getAssistantReply(question) {
   const q = question.toLowerCase();
 
   if (q.includes("payment") || q.includes("upi") || q.includes("pay")) {
-    return "For payment help: use the UPI option on the payment page, complete the payment, upload the screenshot and submit it. The order will be sent for admin verification.";
+    return "For payment help, use the UPI option shown on the payment page, complete the payment, upload your screenshot and submit it. Your order will remain pending until admin verification.";
   }
   if (q.includes("99") || q.includes("renew") || q.includes("expiry") || q.includes("expire")) {
-    return "Lean Pro renewal is ₹99 for another 90 days. The renewal option is shown in your Customer Portal when your current access is close to expiry or already expired. Admin approval is required after payment.";
+    return "Lean Pro renewal is ₹99 for another 90 days. The renewal option appears in your Customer Portal when your current access is close to expiry or has expired. Admin approval is required after payment.";
   }
   if (q.includes("login") || q.includes("password")) {
-    return "Use the email ID or mobile number registered with LeanFit. If you still have trouble, use the support contact below.";
+    return "Use the email ID or mobile number registered with LeanFit. If you still cannot log in, contact LeanFit support.";
   }
   if (q.includes("order") || q.includes("pdf")) {
-    return "You can track your order and download completed plans from the Customer Portal. Pending orders need admin verification first.";
+    return "You can track orders and download completed plans from the Customer Portal. Pending orders need admin verification first.";
   }
   if (q.includes("dashboard") || q.includes("pro")) {
-    return "Lean Pro Dashboard is available only while your approved Lean Pro access is active. Check the dashboard for your expiry date and remaining days.";
+    return "Lean Pro Dashboard is available while your approved Pro access is active. Your dashboard shows the expiry date and remaining days.";
   }
 
-  return "I can help with LeanFit payments, UPI, orders, PDFs, login, Lean Pro access and ₹99 renewal. Try asking about one of these topics, or contact LeanFit support below.";
+  return "I can help with LeanFit payments, UPI, orders, PDFs, login, Lean Pro access and ₹99 renewal. Ask me about any of these, or choose a quick question below.";
 }
 
-function HelpButton({ variant = "light" }) {
+function HelpButton({ variant = "default" }) {
   const [open, setOpen] = useState(false);
-  const [activeFaq, setActiveFaq] = useState(null);
+  const [messages, setMessages] = useState([
+    {
+      id: "welcome",
+      from: "bot",
+      text: "Hi! I'm LeanFit Assistant. How can I help you?",
+    },
+  ]);
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -67,13 +57,20 @@ function HelpButton({ variant = "light" }) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  const askAssistant = () => {
-    const cleanQuestion = question.trim();
-    if (!cleanQuestion) {
-      setAnswer("Type your LeanFit question first.");
-      return;
-    }
-    setAnswer(getAssistantReply(cleanQuestion));
+  useEffect(() => {
+    if (open) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, open]);
+
+  const askAssistant = (text = question) => {
+    const cleanQuestion = text.trim();
+    if (!cleanQuestion) return;
+
+    setMessages((current) => [
+      ...current,
+      { id: `${Date.now()}-user`, from: "user", text: cleanQuestion },
+      { id: `${Date.now()}-bot`, from: "bot", text: getAssistantReply(cleanQuestion) },
+    ]);
+    setQuestion("");
   };
 
   const phoneHref = SUPPORT_PHONE ? `tel:${SUPPORT_PHONE.replace(/\s+/g, "")}` : "";
@@ -81,220 +78,237 @@ function HelpButton({ variant = "light" }) {
   return (
     <>
       <style>{`
-        .lf-help-trigger {
+        .lf-chat-root { position: relative; z-index: 1000; }
+        .lf-chat-trigger {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
           border: 1px solid rgba(31,157,85,.35);
           background: #fff;
-          color: #147a40;
-          border-radius: 10px;
-          padding: 9px 13px;
+          color: #126f3b;
+          border-radius: 999px;
+          padding: 8px 13px;
           font-size: 13px;
           font-weight: 800;
           cursor: pointer;
           white-space: nowrap;
         }
-        .lf-help-trigger.light {
-          border-color: rgba(255,255,255,.28);
+        .lf-chat-trigger.light {
+          border-color: rgba(255,255,255,.3);
           background: rgba(255,255,255,.08);
           color: #fff;
         }
-        .lf-help-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: 9999;
+        .lf-chat-trigger-icon {
+          width: 18px;
+          height: 18px;
           display: grid;
           place-items: center;
-          padding: 18px;
-          background: rgba(7,17,31,.58);
-          backdrop-filter: blur(4px);
+          border-radius: 50%;
+          background: currentColor;
+          color: inherit;
+          font-size: 11px;
         }
-        .lf-help-modal {
-          width: min(620px, 100%);
-          max-height: min(720px, calc(100vh - 36px));
-          overflow: auto;
-          border: 1px solid #dfe6ee;
-          border-radius: 20px;
-          background: #fff;
-          color: #101828;
-          box-shadow: 0 24px 70px rgba(7,17,31,.28);
-        }
-        .lf-help-head {
+        .lf-chat-trigger-icon::after { content: "?"; color: #fff; }
+        .lf-chat-panel {
+          position: fixed;
+          right: 20px;
+          bottom: 20px;
+          width: min(360px, calc(100vw - 28px));
+          height: min(560px, calc(100vh - 40px));
           display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 20px;
-          border-bottom: 1px solid #edf0f4;
+          flex-direction: column;
+          overflow: hidden;
+          background: #fff;
+          color: #0b172a;
+          border: 1px solid #d7e0e8;
+          border-radius: 18px;
+          box-shadow: 0 18px 50px rgba(9,25,43,.22);
         }
-        .lf-help-head h2 { margin: 0; font-size: 22px; }
-        .lf-help-head p { margin: 5px 0 0; color: #667085; font-size: 13px; }
-        .lf-help-close {
-          width: 34px;
-          height: 34px;
-          border: 1px solid #dfe6ee;
-          border-radius: 9px;
-          background: #f8fafc;
-          color: #344054;
+        .lf-chat-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 16px;
+          background: linear-gradient(135deg, #0b172a, #123e3a);
+          color: #fff;
+        }
+        .lf-chat-head-title { font-weight: 800; font-size: 15px; }
+        .lf-chat-head-sub { margin-top: 2px; font-size: 11px; opacity: .78; }
+        .lf-chat-close {
+          width: 30px;
+          height: 30px;
+          border: 1px solid rgba(255,255,255,.28);
+          border-radius: 50%;
+          background: rgba(255,255,255,.08);
+          color: #fff;
           cursor: pointer;
           font-size: 18px;
           line-height: 1;
         }
-        .lf-help-body { padding: 18px 20px 20px; }
-        .lf-help-section { margin-top: 18px; }
-        .lf-help-section:first-child { margin-top: 0; }
-        .lf-help-section h3 { margin: 0 0 10px; font-size: 15px; }
-        .lf-help-faq { display: grid; gap: 8px; }
-        .lf-help-faq button {
-          width: 100%;
-          padding: 12px 14px;
-          border: 1px solid #e3e8ef;
-          border-radius: 11px;
-          background: #f8fafc;
-          color: #172033;
-          text-align: left;
-          font-weight: 750;
-          cursor: pointer;
-        }
-        .lf-help-faq button:hover { transform: none; background: #f2f8f4; }
-        .lf-help-answer {
-          margin-top: -2px;
-          padding: 12px 14px;
-          border-left: 3px solid #1f9d55;
-          background: #f2faf5;
-          color: #475467;
-          font-size: 13px;
-          line-height: 1.55;
-        }
-        .lf-help-chat {
-          display: grid;
-          gap: 9px;
+        .lf-chat-messages {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
           padding: 14px;
-          border: 1px solid #dce9e1;
-          border-radius: 14px;
-          background: #f6fbf8;
+          background: #f7f9fb;
         }
-        .lf-help-chat textarea {
-          width: 100%;
-          min-height: 76px;
-          resize: vertical;
-          padding: 11px 12px;
-          border: 1px solid #d0d8e2;
-          border-radius: 10px;
+        .lf-chat-message { display: flex; margin-bottom: 10px; }
+        .lf-chat-message.user { justify-content: flex-end; }
+        .lf-chat-bubble {
+          max-width: 86%;
+          padding: 9px 11px;
+          border-radius: 14px 14px 14px 4px;
           background: #fff;
-          color: #101828;
-          font: inherit;
+          border: 1px solid #dce5ec;
+          font-size: 13px;
+          line-height: 1.45;
         }
-        .lf-help-chat-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .lf-help-primary, .lf-help-secondary {
+        .lf-chat-message.user .lf-chat-bubble {
+          border-radius: 14px 14px 4px 14px;
+          background: #159447;
+          border-color: #159447;
+          color: #fff;
+        }
+        .lf-chat-quick {
+          display: flex;
+          gap: 7px;
+          overflow-x: auto;
+          padding: 9px 12px;
+          border-top: 1px solid #e5ebf0;
+          background: #fff;
+        }
+        .lf-chat-chip {
+          flex: 0 0 auto;
+          border: 1px solid #d7e0e8;
+          border-radius: 999px;
+          background: #f7fafc;
+          color: #183047;
+          padding: 7px 9px;
+          font-size: 11px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+        .lf-chat-contact {
+          display: flex;
+          gap: 8px;
+          padding: 0 12px 10px;
+          background: #fff;
+        }
+        .lf-chat-contact a {
+          flex: 1;
+          text-align: center;
+          text-decoration: none;
+          border: 1px solid #d7e0e8;
+          border-radius: 9px;
+          padding: 7px 8px;
+          color: #126f3b;
+          font-size: 11px;
+          font-weight: 800;
+        }
+        .lf-chat-input {
+          display: flex;
+          gap: 7px;
+          padding: 10px 12px 12px;
+          border-top: 1px solid #e5ebf0;
+          background: #fff;
+        }
+        .lf-chat-input input {
+          min-width: 0;
+          flex: 1;
+          border: 1px solid #cbd6df;
           border-radius: 10px;
-          padding: 10px 13px;
+          padding: 9px 10px;
+          font-size: 13px;
+          outline: none;
+        }
+        .lf-chat-input button {
+          border: 0;
+          border-radius: 10px;
+          padding: 0 13px;
+          background: #159447;
+          color: #fff;
           font-weight: 800;
           cursor: pointer;
         }
-        .lf-help-primary { border: 0; background: #1f9d55; color: #fff; }
-        .lf-help-secondary { border: 1px solid #d8e0e8; background: #fff; color: #172033; }
-        .lf-help-chat-result { color: #475467; font-size: 13px; line-height: 1.55; }
-        .lf-help-contact {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 9px;
-        }
-        .lf-help-contact a, .lf-help-contact span {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          min-height: 38px;
-          padding: 8px 12px;
-          border: 1px solid #dfe6ee;
-          border-radius: 10px;
-          background: #fff;
-          color: #147a40;
-          text-decoration: none;
-          font-size: 13px;
-          font-weight: 800;
-        }
-        .lf-help-note { margin: 8px 0 0; color: #667085; font-size: 12px; }
-        @media (max-width: 560px) {
-          .lf-help-overlay { padding: 10px; }
-          .lf-help-modal { max-height: calc(100vh - 20px); border-radius: 16px; }
-          .lf-help-head, .lf-help-body { padding-left: 15px; padding-right: 15px; }
-          .lf-help-trigger { padding: 8px 10px; }
+        @media (max-width: 600px) {
+          .lf-chat-panel {
+            right: 10px;
+            bottom: 10px;
+            width: calc(100vw - 20px);
+            height: min(600px, calc(100vh - 20px));
+            border-radius: 16px;
+          }
+          .lf-chat-trigger { padding: 8px 10px; }
+          .lf-chat-trigger-label { display: none; }
         }
       `}</style>
 
-      <button
-        type="button"
-        className={`lf-help-trigger ${variant === "light" ? "light" : ""}`}
-        onClick={() => setOpen(true)}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-      >
-        Help
-      </button>
+      <div className="lf-chat-root">
+        <button
+          type="button"
+          className={`lf-chat-trigger ${variant === "light" ? "light" : ""}`}
+          onClick={() => setOpen(true)}
+          aria-label="Open LeanFit Help chat"
+        >
+          <span className="lf-chat-trigger-icon" aria-hidden="true" />
+          <span className="lf-chat-trigger-label">Help</span>
+        </button>
 
-      {open && (
-        <div className="lf-help-overlay" role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget) setOpen(false);
-        }}>
-          <section className="lf-help-modal" role="dialog" aria-modal="true" aria-labelledby="lf-help-title">
-            <header className="lf-help-head">
+        {open && (
+          <div className="lf-chat-panel" role="dialog" aria-label="LeanFit Help chat">
+            <div className="lf-chat-head">
               <div>
-                <h2 id="lf-help-title">LeanFit Help & Support</h2>
-                <p>Quick answers for payments, orders, Lean Pro and login.</p>
+                <div className="lf-chat-head-title">LeanFit Assistant</div>
+                <div className="lf-chat-head-sub">Quick help for payments, orders, Pro and login</div>
               </div>
-              <button type="button" className="lf-help-close" onClick={() => setOpen(false)} aria-label="Close help">×</button>
-            </header>
-
-            <div className="lf-help-body">
-              <section className="lf-help-section">
-                <h3>Quick Help</h3>
-                <div className="lf-help-faq">
-                  {FAQS.map((faq, index) => (
-                    <div key={faq.title}>
-                      <button
-                        type="button"
-                        onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                        aria-expanded={activeFaq === index}
-                      >
-                        {faq.title}
-                      </button>
-                      {activeFaq === index && <div className="lf-help-answer">{faq.body}</div>}
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section className="lf-help-section">
-                <h3>Ask LeanFit Assistant</h3>
-                <div className="lf-help-chat">
-                  <textarea
-                    value={question}
-                    onChange={(event) => setQuestion(event.target.value)}
-                    placeholder="Example: How do I renew Lean Pro?"
-                    aria-label="Ask LeanFit Assistant"
-                  />
-                  <div className="lf-help-chat-actions">
-                    <button type="button" className="lf-help-primary" onClick={askAssistant}>Ask</button>
-                    <button type="button" className="lf-help-secondary" onClick={() => { setQuestion(""); setAnswer(""); }}>Clear</button>
-                  </div>
-                  {answer && <div className="lf-help-chat-result" aria-live="polite">{answer}</div>}
-                </div>
-                <p className="lf-help-note">For account-specific issues or anything the assistant cannot answer, contact LeanFit support.</p>
-              </section>
-
-              <section className="lf-help-section">
-                <h3>Talk to LeanFit Support</h3>
-                <div className="lf-help-contact">
-                  {SUPPORT_PHONE ? (
-                    <a href={phoneHref}>Phone / WhatsApp: {SUPPORT_PHONE}</a>
-                  ) : null}
-                  <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">Instagram: {INSTAGRAM_HANDLE}</a>
-                </div>
-                {!SUPPORT_PHONE && <p className="lf-help-note">Phone/WhatsApp can be added after you provide the number.</p>}
-              </section>
+              <button type="button" className="lf-chat-close" onClick={() => setOpen(false)} aria-label="Close help">×</button>
             </div>
-          </section>
-        </div>
-      )}
+
+            <div className="lf-chat-messages" aria-live="polite">
+              {messages.map((message) => (
+                <div key={message.id} className={`lf-chat-message ${message.from}`}>
+                  <div className="lf-chat-bubble">{message.text}</div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            <div className="lf-chat-quick" aria-label="Quick questions">
+              {QUICK_QUESTIONS.map((item) => (
+                <button key={item} type="button" className="lf-chat-chip" onClick={() => askAssistant(item)}>
+                  {item}
+                </button>
+              ))}
+            </div>
+
+            <div className="lf-chat-contact">
+              {phoneHref ? (
+                <a href={phoneHref}>Call Support</a>
+              ) : (
+                <a href={`https://www.instagram.com/lean_varshith/`} target="_blank" rel="noreferrer">Instagram {INSTAGRAM_HANDLE}</a>
+              )}
+              {phoneHref && (
+                <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">Instagram</a>
+              )}
+            </div>
+
+            <div className="lf-chat-input">
+              <input
+                type="text"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") askAssistant();
+                }}
+                placeholder="Ask LeanFit anything..."
+                aria-label="Ask LeanFit Assistant"
+              />
+              <button type="button" onClick={() => askAssistant()}>Send</button>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }
