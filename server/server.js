@@ -12,6 +12,7 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import progressRoutes from "./routes/progressRoutes.js";
 import foodRoutes from "./routes/foodRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
+import couponRoutes from "./routes/couponRoutes.js";
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use("/api", paymentRoutes);
 app.use("/api", progressRoutes);
 app.use("/api", foodRoutes);
 app.use("/api", feedbackRoutes);
+app.use("/api", couponRoutes);
 
 app.use((error, req, res, next) => {
   console.error("Unhandled server error:", error);

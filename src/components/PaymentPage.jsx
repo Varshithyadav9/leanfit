@@ -25,21 +25,87 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
   const selectedPlan = paymentData.selectedPlan || "No plan selected";
-  const selectedPrice = Number(paymentData.selectedPrice || 0);
+  const originalPrice = Number(paymentData.selectedPrice || 0);
+  const finalPrice = Number(appliedCoupon?.finalAmount ?? originalPrice);
+  const discountAmount = Number(appliedCoupon?.discountAmount || 0);
   const isRenewal = selectedPlan === "Lean Pro Renewal";
 
   const upiLink = useMemo(() => {
     const params = new URLSearchParams({
       pa: UPI_ID,
       pn: "LeanFit",
-      am: String(selectedPrice || 0),
+      am: String(finalPrice || 0),
       cu: "INR",
-      tn: selectedPlan,
+      tn: appliedCoupon?.code
+        ? `${selectedPlan} - Coupon ${appliedCoupon.code}`
+        : selectedPlan,
     });
 
     return `upi://pay?${params.toString()}`;
-  }, [selectedPlan, selectedPrice]);
+  }, [selectedPlan, finalPrice, appliedCoupon]);
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    setCouponError("");
+    setError("");
+
+    if (!code) {
+      setCouponError("Enter a coupon code.");
+      return;
+    }
+
+    if (!paymentData.selectedPlan || originalPrice <= 0) {
+      setCouponError("Please select a plan first.");
+      return;
+    }
+
+    setCouponLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          selectedPlan,
+          email: paymentData.email || "",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to apply coupon.");
+      }
+
+      setAppliedCoupon({
+        code: data.coupon.code,
+        discountType: data.coupon.discountType,
+        discountValue: data.coupon.discountValue,
+        originalAmount: Number(data.originalAmount || originalPrice),
+        discountAmount: Number(data.discountAmount || 0),
+        finalAmount: Number(data.finalAmount || 0),
+      });
+      setCouponInput(data.coupon.code);
+    } catch (couponApplyError) {
+      setAppliedCoupon(null);
+      setCouponError(couponApplyError.message || "Unable to apply coupon.");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError("");
+  };
 
   const handleScreenshotChange = (event) => {
     const file = event.target.files?.[0];
@@ -72,7 +138,7 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
   };
 
   const submitPayment = async () => {
-    if (!paymentData.selectedPlan || selectedPrice <= 0) {
+    if (!paymentData.selectedPlan || finalPrice <= 0) {
       setError("Please select a plan first.");
       return;
     }
@@ -93,7 +159,13 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
     try {
       const payload = new FormData();
       payload.append("paymentScreenshot", paymentScreenshot);
-      payload.append("userData", JSON.stringify(paymentData));
+      payload.append(
+        "userData",
+        JSON.stringify({
+          ...paymentData,
+          couponCode: appliedCoupon?.code || "",
+        })
+      );
 
       const response = await fetch(`${API_BASE_URL}/manual-payment/submit`, {
         method: "POST",
@@ -113,7 +185,10 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
         email: paymentData.email,
         mobile: paymentData.mobile || "",
         selectedPlan,
-        selectedPrice,
+        selectedPrice: Number(data.finalAmount ?? finalPrice),
+        originalPrice: Number(data.originalAmount ?? originalPrice),
+        discountAmount: Number(data.discountAmount ?? discountAmount),
+        couponCode: data.couponCode || appliedCoupon?.code || "",
         submittedAt: new Date().toISOString(),
       };
 
@@ -149,7 +224,57 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
         <div className="selected-plan-box">
           <p>Selected Plan</p>
           <h3>{selectedPlan}</h3>
-          <strong>₹{selectedPrice}</strong>
+          {appliedCoupon ? (
+            <div className="coupon-price-stack">
+              <span className="coupon-original-price">₹{originalPrice.toFixed(2)}</span>
+              <strong>₹{finalPrice.toFixed(2)}</strong>
+            </div>
+          ) : (
+            <strong>₹{originalPrice}</strong>
+          )}
+        </div>
+
+        <div className="summary-box coupon-box">
+          <h3>Have a Coupon?</h3>
+          <p className="muted">Enter your coupon code before making the UPI payment.</p>
+
+          <div className="coupon-input-row">
+            <input
+              type="text"
+              value={couponInput}
+              onChange={(event) => {
+                setCouponInput(event.target.value.toUpperCase());
+                if (appliedCoupon) setAppliedCoupon(null);
+                setCouponError("");
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyCoupon();
+                }
+              }}
+              placeholder="Enter coupon code"
+              maxLength={30}
+              disabled={couponLoading || submitting}
+            />
+            <button
+              className="secondary-btn coupon-apply-btn"
+              type="button"
+              onClick={appliedCoupon ? removeCoupon : applyCoupon}
+              disabled={couponLoading || submitting}
+            >
+              {couponLoading ? "Checking..." : appliedCoupon ? "Remove" : "Apply Coupon"}
+            </button>
+          </div>
+
+          {appliedCoupon && (
+            <div className="coupon-success">
+              <strong>✓ {appliedCoupon.code} applied</strong>
+              <span>You save ₹{discountAmount.toFixed(2)}</span>
+            </div>
+          )}
+
+          {couponError && <p className="coupon-error">{couponError}</p>}
         </div>
 
         <div className="summary-box">
@@ -157,26 +282,34 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
           <p><strong>Name:</strong> {paymentData.name || "Not specified"}</p>
           <p><strong>Email:</strong> {paymentData.email || "Not specified"}</p>
           <p><strong>Plan:</strong> {selectedPlan}</p>
-          <p><strong>Amount:</strong> ₹{selectedPrice}</p>
+          <div className="price-breakdown">
+            <p><span>Plan Price</span><strong>₹{originalPrice.toFixed(2)}</strong></p>
+            {appliedCoupon && (
+              <>
+                <p className="discount-line"><span>Coupon ({appliedCoupon.code})</span><strong>- ₹{discountAmount.toFixed(2)}</strong></p>
+                <p className="final-price-line"><span>Final Payable Amount</span><strong>₹{finalPrice.toFixed(2)}</strong></p>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="summary-box">
           <h3>Pay by UPI</h3>
           <p><strong>UPI ID:</strong> {UPI_ID}</p>
-          <p><strong>Amount:</strong> ₹{selectedPrice}</p>
+          <p><strong>Amount:</strong> ₹{finalPrice.toFixed(2)}</p>
 
           <a
             className="primary-btn full-btn"
             href={upiLink}
-            aria-disabled={selectedPrice <= 0}
+            aria-disabled={finalPrice <= 0}
             onClick={(event) => {
-              if (selectedPrice <= 0) {
+              if (finalPrice <= 0) {
                 event.preventDefault();
                 setError("Please select a plan first.");
               }
             }}
           >
-            Open UPI App and Pay ₹{selectedPrice}
+            Open UPI App and Pay ₹{finalPrice.toFixed(2)}
           </a>
         </div>
 
@@ -209,7 +342,7 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
           className="primary-btn full-btn"
           type="button"
           onClick={submitPayment}
-          disabled={submitting || selectedPrice <= 0}
+          disabled={submitting || finalPrice <= 0}
         >
           {submitting ? "Submitting Payment..." : "I Have Completed Payment"}
         </button>

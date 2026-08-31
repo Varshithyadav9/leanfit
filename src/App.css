@@ -2292,3 +2292,119 @@ body, button, input, select, textarea {
   }
 }
 
+
+/* =========================================================
+   COUPON PAYMENT UI
+   ========================================================= */
+.coupon-box {
+  border-color: #cfe8d8;
+  background: #fbfffc;
+}
+
+.coupon-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.coupon-input-row input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #ced7e0;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.coupon-input-row input:focus {
+  border-color: #1f9d55;
+  box-shadow: 0 0 0 4px rgba(31,157,85,.11);
+}
+
+.coupon-apply-btn {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.coupon-success {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #a7ddba;
+  border-radius: 12px;
+  background: #edf9f2;
+  color: #166534;
+  font-size: 14px;
+}
+
+.coupon-error {
+  margin: 10px 0 0;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.coupon-price-stack {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.coupon-original-price {
+  color: #7b8794;
+  text-decoration: line-through;
+  font-weight: 600;
+}
+
+.price-breakdown {
+  margin-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.price-breakdown p {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 8px 0;
+}
+
+.price-breakdown p strong {
+  white-space: nowrap;
+}
+
+.price-breakdown .discount-line {
+  color: #15803d;
+}
+
+.price-breakdown .final-price-line {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #cbd5e1;
+  color: #0c1729;
+  font-size: 17px;
+}
+
+@media (max-width: 560px) {
+  .coupon-input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .coupon-apply-btn {
+    width: 100%;
+  }
+
+  .coupon-success {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
