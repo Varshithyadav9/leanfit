@@ -1,8 +1,10 @@
-LEANFIT HEADER LOGIN FIX
+LEANFIT DESKTOP LOGIN SPACING FIX
 
-Replace your existing src/components/SiteHeader.jsx with the SiteHeader.jsx included in this ZIP.
+Replace src/App.css with the App.css included in this ZIP.
 
-Public header: About | Help | Customer Login | Admin Login
-Logged-in customer header: About | Help | Home | Logout
+What this fixes:
+- Removes the large blank vertical gap above the desktop login card.
+- Places the login card shortly below the global header.
+- Mobile layout is intentionally left unchanged.
 
-No backend, MongoDB, coupon, payment, Dashboard, or CustomerPortal changes are required for this patch.
+No changes are required to index.css, backend, MongoDB, coupons, or Render.

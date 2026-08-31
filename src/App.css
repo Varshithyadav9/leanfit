@@ -2448,3 +2448,16 @@ body, button, input, select, textarea {
   .global-site-header .compact-nav{gap:2px;}
   .global-site-header .compact-nav button,.global-site-header .lf-chat-trigger.nav-help{padding:5px 4px;font-size:8px;}
 }
+
+/* =========================================================
+   GLOBAL HEADER + AUTH PAGE DESKTOP SPACING FIX
+   Keeps mobile layout unchanged.
+   ========================================================= */
+@media (min-width: 801px) {
+  .auth-page {
+    min-height: auto;
+    place-items: start center;
+    padding: 24px 16px 56px;
+  }
+}
+
