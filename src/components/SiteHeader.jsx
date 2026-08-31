@@ -1,6 +1,17 @@
 import HelpButton from "./HelpButton";
 
 function SiteHeader({ setPage }) {
+  const customerLoggedIn = Boolean(
+    localStorage.getItem("leanfitCustomer") && localStorage.getItem("leanfitToken")
+  );
+
+  const handleLogout = () => {
+    localStorage.removeItem("leanfitCustomer");
+    localStorage.removeItem("leanfitToken");
+    localStorage.removeItem("leanfitActiveOrder");
+    setPage("welcome");
+  };
+
   return (
     <header className="topbar compact-topbar global-site-header">
       <div className="welcome-brand-block">
@@ -13,8 +24,18 @@ function SiteHeader({ setPage }) {
       <nav className="compact-nav" aria-label="Main navigation">
         <button type="button" onClick={() => setPage("about")}>About</button>
         <HelpButton navMode />
-        <button type="button" className="customer-login-link" onClick={() => setPage("login")}>Customer Login</button>
-        <button type="button" className="admin-login-btn" onClick={() => setPage("admin-login")}>Admin Login</button>
+
+        {customerLoggedIn ? (
+          <>
+            <button type="button" onClick={() => setPage("customer-portal")}>Home</button>
+            <button type="button" className="customer-login-link" onClick={handleLogout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="customer-login-link" onClick={() => setPage("login")}>Customer Login</button>
+            <button type="button" className="admin-login-btn" onClick={() => setPage("admin-login")}>Admin Login</button>
+          </>
+        )}
       </nav>
     </header>
   );

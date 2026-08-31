@@ -1,7 +1,8 @@
-Replace only the included files.
+LEANFIT HEADER LOGIN FIX
 
-Important: the Upgrade Lean Pro - ₹99 button opens your existing payment page and stores:
-- leanfitRenewalPlan
-- leanfitSelectedPlan
+Replace your existing src/components/SiteHeader.jsx with the SiteHeader.jsx included in this ZIP.
 
-Your PaymentPage should read one of these keys to prefill Lean Pro Renewal / ₹99.
+Public header: About | Help | Customer Login | Admin Login
+Logged-in customer header: About | Help | Home | Logout
+
+No backend, MongoDB, coupon, payment, Dashboard, or CustomerPortal changes are required for this patch.
