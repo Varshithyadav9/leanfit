@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import HelpButton from "./HelpButton";
 
 const API_BASE_URL = `${(
   import.meta.env.VITE_API_URL || "https://leanfit.onrender.com"
@@ -210,9 +209,6 @@ function PaymentPage({ formData, setPage, setSubmittedOrder }) {
   return (
     <main className="page">
       <section className="card" style={{ position: "relative" }}>
-        <div style={{ position: "absolute", top: "18px", right: "18px", zIndex: 2 }}>
-          <HelpButton variant="default" />
-        </div>
         <p className="brand-label">UPI PAYMENT</p>
         <h2>{isRenewal ? "Renew Lean Pro Membership" : "Complete Your Order"}</h2>
         <p className="muted">

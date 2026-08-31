@@ -1,5 +1,3 @@
-import HelpButton from "./HelpButton";
-
 function WelcomePage({ setPage }) {
   const openInfo = (page) => setPage(page);
 
@@ -15,7 +13,6 @@ function WelcomePage({ setPage }) {
 
         <nav className="compact-nav" aria-label="Main navigation">
           <button type="button" onClick={() => openInfo("about")}>About</button>
-          <HelpButton variant="default" />
           <button type="button" className="customer-login-link" onClick={() => setPage("login")}>Customer Login</button>
           <button type="button" className="admin-login-btn" onClick={() => setPage("admin-login")}>Admin Login</button>
         </nav>

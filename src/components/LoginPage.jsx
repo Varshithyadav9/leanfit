@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import PasswordInput from "./PasswordInput";
-import HelpButton from "./HelpButton";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 
@@ -148,9 +147,6 @@ function LoginPage({ initialMode = "login", setPage, onAuthenticated }) {
 
   return (
     <main className="auth-page">
-      <div style={{ position: "absolute", top: "18px", right: "18px", zIndex: 5 }}>
-        <HelpButton variant="default" />
-      </div>
       <section className="auth-shell">
         <aside className="auth-side">
           <img

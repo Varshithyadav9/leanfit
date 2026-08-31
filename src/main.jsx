@@ -4,11 +4,13 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import "./App.css";
 import App from "./App.jsx";
+import HelpButton from "./components/HelpButton.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
+      <HelpButton variant="default" />
     </BrowserRouter>
   </React.StrictMode>
 );

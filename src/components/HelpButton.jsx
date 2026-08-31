@@ -78,7 +78,7 @@ function HelpButton({ variant = "default" }) {
   return (
     <>
       <style>{`
-        .lf-chat-root { position: relative; z-index: 1000; }
+        .lf-chat-root { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }
         .lf-chat-trigger {
           display: inline-flex;
           align-items: center;
@@ -111,10 +111,10 @@ function HelpButton({ variant = "default" }) {
         .lf-chat-trigger-icon::after { content: "?"; color: #fff; }
         .lf-chat-panel {
           position: fixed;
-          right: 20px;
-          bottom: 20px;
+          right: 18px;
+          bottom: 72px;
           width: min(360px, calc(100vw - 28px));
-          height: min(560px, calc(100vh - 40px));
+          height: min(560px, calc(100dvh - 100px));
           display: flex;
           flex-direction: column;
           overflow: hidden;
@@ -232,15 +232,34 @@ function HelpButton({ variant = "default" }) {
           cursor: pointer;
         }
         @media (max-width: 600px) {
+          .lf-chat-root {
+            right: 14px;
+            bottom: max(14px, env(safe-area-inset-bottom));
+          }
           .lf-chat-panel {
             right: 10px;
-            bottom: 10px;
+            bottom: calc(68px + env(safe-area-inset-bottom));
             width: calc(100vw - 20px);
-            height: min(600px, calc(100vh - 20px));
-            border-radius: 16px;
+            height: min(68dvh, 520px);
+            min-height: 390px;
+            border-radius: 18px;
           }
-          .lf-chat-trigger { padding: 8px 10px; }
+          .lf-chat-head { padding: 12px 14px; }
+          .lf-chat-messages { padding: 12px; }
+          .lf-chat-quick { padding: 8px 10px; }
+          .lf-chat-contact { padding: 0 10px 8px; }
+          .lf-chat-input { padding: 9px 10px 10px; }
+          .lf-chat-trigger {
+            width: 46px;
+            height: 46px;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 0 8px 24px rgba(9,25,43,.18);
+          }
           .lf-chat-trigger-label { display: none; }
+        }
+        @media (max-width: 600px) and (max-height: 620px) {
+          .lf-chat-panel { height: calc(100dvh - 92px); min-height: 0; }
         }
       `}</style>
 
@@ -260,7 +279,7 @@ function HelpButton({ variant = "default" }) {
             <div className="lf-chat-head">
               <div>
                 <div className="lf-chat-head-title">LeanFit Assistant</div>
-                <div className="lf-chat-head-sub">Quick help for payments, orders, Pro and login</div>
+                <div className="lf-chat-head-sub">Help with LeanFit plans, payments, orders and account access</div>
               </div>
               <button type="button" className="lf-chat-close" onClick={() => setOpen(false)} aria-label="Close help">×</button>
             </div>
