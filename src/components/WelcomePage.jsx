@@ -3,20 +3,6 @@ function WelcomePage({ setPage }) {
 
   return (
     <main className="welcome-page compact-welcome">
-      <header className="topbar compact-topbar">
-        <div className="welcome-brand-block">
-          <button className="brand-button" type="button" onClick={() => setPage("welcome")} aria-label="LeanFit home">
-            <img src="/leanfit-logo.png" alt="LeanFit" className="welcome-logo" />
-          </button>
-          <span className="welcome-brand-author">BY VARSHITH</span>
-        </div>
-
-        <nav className="compact-nav" aria-label="Main navigation">
-          <button type="button" onClick={() => openInfo("about")}>About</button>
-          <button type="button" className="customer-login-link" onClick={() => setPage("login")}>Customer Login</button>
-          <button type="button" className="admin-login-btn" onClick={() => setPage("admin-login")}>Admin Login</button>
-        </nav>
-      </header>
 
       <section className="hero compact-hero">
         <div className="hero-content">

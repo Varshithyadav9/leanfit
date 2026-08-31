@@ -34,7 +34,7 @@ function getAssistantReply(question) {
   return "I can help with LeanFit payments, UPI, orders, PDFs, login, Lean Pro access and ₹99 renewal. Ask me about any of these, or choose a quick question below.";
 }
 
-function HelpButton({ variant = "default" }) {
+function HelpButton({ variant = "default", navMode = false }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -79,6 +79,7 @@ function HelpButton({ variant = "default" }) {
     <>
       <style>{`
         .lf-chat-root { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }
+        .lf-chat-root.nav-mode { position: static; right: auto; bottom: auto; }
         .lf-chat-trigger {
           display: inline-flex;
           align-items: center;
@@ -93,6 +94,17 @@ function HelpButton({ variant = "default" }) {
           cursor: pointer;
           white-space: nowrap;
         }
+        .lf-chat-trigger.nav-help {
+          border: 0;
+          background: transparent;
+          color: #0c1729;
+          border-radius: 9px;
+          padding: 9px 10px;
+          font-size: 12px;
+          font-weight: 850;
+          box-shadow: none;
+        }
+        .lf-chat-trigger.nav-help:hover { background: #eef5f0; }
         .lf-chat-trigger.light {
           border-color: rgba(255,255,255,.3);
           background: rgba(255,255,255,.08);
@@ -232,7 +244,7 @@ function HelpButton({ variant = "default" }) {
           cursor: pointer;
         }
         @media (max-width: 600px) {
-          .lf-chat-root {
+          .lf-chat-root:not(.nav-mode) {
             right: 14px;
             bottom: max(14px, env(safe-area-inset-bottom));
           }
@@ -249,28 +261,29 @@ function HelpButton({ variant = "default" }) {
           .lf-chat-quick { padding: 8px 10px; }
           .lf-chat-contact { padding: 0 10px 8px; }
           .lf-chat-input { padding: 9px 10px 10px; }
-          .lf-chat-trigger {
+          .lf-chat-trigger:not(.nav-help) {
             width: 46px;
             height: 46px;
             justify-content: center;
             padding: 0;
             box-shadow: 0 8px 24px rgba(9,25,43,.18);
           }
-          .lf-chat-trigger-label { display: none; }
+          .lf-chat-trigger:not(.nav-help) .lf-chat-trigger-label { display: none; }
+          .lf-chat-trigger.nav-help { min-height: 32px; padding: 6px 7px; font-size: 9px; white-space: nowrap; }
         }
         @media (max-width: 600px) and (max-height: 620px) {
           .lf-chat-panel { height: calc(100dvh - 92px); min-height: 0; }
         }
       `}</style>
 
-      <div className="lf-chat-root">
+      <div className={`lf-chat-root ${navMode ? "nav-mode" : ""}`}>
         <button
           type="button"
-          className={`lf-chat-trigger ${variant === "light" ? "light" : ""}`}
+          className={`lf-chat-trigger ${variant === "light" ? "light" : ""} ${navMode ? "nav-help" : ""}`}
           onClick={() => setOpen(true)}
           aria-label="Open LeanFit Help chat"
         >
-          <span className="lf-chat-trigger-icon" aria-hidden="true" />
+          {!navMode && <span className="lf-chat-trigger-icon" aria-hidden="true" />}
           <span className="lf-chat-trigger-label">Help</span>
         </button>
 

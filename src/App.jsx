@@ -27,6 +27,7 @@ import Calculators from "./components/Calculators";
 import FeedbackPage from "./components/FeedbackPage";
 import ForgotPassword from "./components/ForgotPassword";
 import ProtectedPage from "./components/ProtectedPage";
+import SiteHeader from "./components/SiteHeader";
 import { saveSession } from "./utils/auth";
 const PUBLIC_PAGE_PATHS = {
   about: "/about",
@@ -63,6 +64,11 @@ const setPage = (nextPage) => {
     navigate("/");
   }
 };
+
+const withSiteHeader = (content) => (<>
+  <SiteHeader setPage={setPage} />
+  {content}
+</>);
   const [generatedPlan, setGeneratedPlan] = useState("");
 
   const [formData, setFormData] = useState({
@@ -116,7 +122,7 @@ const setPage = (nextPage) => {
 const publicPage = PATH_TO_PUBLIC_PAGE[location.pathname];
 
 if (publicPage === "calculators") {
-  return <Calculators setPage={setPage} />;
+  return withSiteHeader(<Calculators setPage={setPage} />);
 }
 
 if (
@@ -125,18 +131,18 @@ if (
   publicPage === "privacy" ||
   publicPage === "terms"
 ) {
-  return <InfoPage type={publicPage} setPage={setPage} />;
+  return withSiteHeader(<InfoPage type={publicPage} setPage={setPage} />);
 }
 
 if (location.pathname !== "/") {
-  return <NotFoundPage setPage={setPage} />;
+  return withSiteHeader(<NotFoundPage setPage={setPage} />);
 }
   switch (page) {
     case "welcome":
-      return <WelcomePage setPage={setPage} />;
+      return withSiteHeader(<WelcomePage setPage={setPage} />);
 
     case "register":
-      return (
+      return withSiteHeader(
         <LoginPage
           initialMode="register"
           setPage={setPage}
@@ -145,7 +151,7 @@ if (location.pathname !== "/") {
       );
 
     case "login":
-      return (
+      return withSiteHeader(
         <LoginPage
           initialMode="login"
           setPage={setPage}
@@ -154,10 +160,10 @@ if (location.pathname !== "/") {
       );
 
     case "forgot-password":
-      return <ForgotPassword setPage={setPage} />;
+      return withSiteHeader(<ForgotPassword setPage={setPage} />);
 
     case "profile":
-      return (
+      return withSiteHeader(
         <ProtectedPage setPage={setPage}><BasicProfile
           formData={formData}
           setFormData={setFormData}
@@ -166,7 +172,7 @@ if (location.pathname !== "/") {
       );
 
     case "goal":
-      return (
+      return withSiteHeader(
         <GoalPage
           formData={formData}
           setFormData={setFormData}
@@ -175,7 +181,7 @@ if (location.pathname !== "/") {
       );
 
     case "food":
-      return (
+      return withSiteHeader(
         <FoodPreferences
           formData={formData}
           setFormData={setFormData}
@@ -184,7 +190,7 @@ if (location.pathname !== "/") {
       );
 
     case "habits":
-      return (
+      return withSiteHeader(
         <HabitsPage
           formData={formData}
           setFormData={setFormData}
@@ -193,7 +199,7 @@ if (location.pathname !== "/") {
       );
 
     case "plans":
-      return (
+      return withSiteHeader(
         <PlanPage
           formData={formData}
           setFormData={setFormData}
@@ -202,7 +208,7 @@ if (location.pathname !== "/") {
       );
 
     case "payment":
-      return (
+      return withSiteHeader(
         <ProtectedPage setPage={setPage}><PaymentPage
           formData={formData}
           setPage={setPage}
@@ -211,7 +217,7 @@ if (location.pathname !== "/") {
       );
 
     case "success":
-      return (
+      return withSiteHeader(
         <SuccessPage
           formData={formData}
           generatedPlan={generatedPlan}
@@ -220,7 +226,7 @@ if (location.pathname !== "/") {
       );
 
     case "dashboard":
-      return (
+      return withSiteHeader(
         <ProtectedPage setPage={setPage}><Dashboard
           formData={formData}
           generatedPlan={generatedPlan}
@@ -229,10 +235,10 @@ if (location.pathname !== "/") {
       );
 
     case "customer-auth":
-      return <CustomerAuth setPage={setPage} />;
+      return withSiteHeader(<CustomerAuth setPage={setPage} />);
 
     case "customer-portal":
-      return <ProtectedPage setPage={setPage}><CustomerPortal setPage={setPage} /></ProtectedPage>;
+      return withSiteHeader(<ProtectedPage setPage={setPage}><CustomerPortal setPage={setPage} /></ProtectedPage>);
 
     case "admin-login":
       return <AdminLogin setPage={setPage} />;
@@ -244,26 +250,26 @@ if (location.pathname !== "/") {
     case "email-templates":
       return <EmailTemplates setPage={setPage} />;
     case "profile-settings":
-      return <ProtectedPage setPage={setPage}><Profile setPage={setPage} /></ProtectedPage>;
+      return withSiteHeader(<ProtectedPage setPage={setPage}><Profile setPage={setPage} /></ProtectedPage>);
     case "settings":
-      return <ProtectedPage setPage={setPage}><Settings setPage={setPage} /></ProtectedPage>;
+      return withSiteHeader(<ProtectedPage setPage={setPage}><Settings setPage={setPage} /></ProtectedPage>);
     case "smart-coach":
-      return <SmartCoach formData={formData} setPage={setPage} />;
+      return withSiteHeader(<SmartCoach formData={formData} setPage={setPage} />);
     case "calculators":
-      return <Calculators setPage={setPage} />;
+      return withSiteHeader(<Calculators setPage={setPage} />);
     case "feedback":
-      return <ProtectedPage setPage={setPage}><FeedbackPage setPage={setPage} mode="customer" /></ProtectedPage>;
+      return withSiteHeader(<ProtectedPage setPage={setPage}><FeedbackPage setPage={setPage} mode="customer" /></ProtectedPage>);
     case "admin-feedback":
       return <FeedbackPage setPage={setPage} mode="admin" />;
     case "privacy":
     case "terms":
     case "contact":
     case "about":
-      return <InfoPage type={page} setPage={setPage} />;
+      return withSiteHeader(<InfoPage type={page} setPage={setPage} />);
     case "not-found":
-      return <NotFoundPage setPage={setPage} />;
+      return withSiteHeader(<NotFoundPage setPage={setPage} />);
     default:
-      return <NotFoundPage setPage={setPage} />;
+      return withSiteHeader(<NotFoundPage setPage={setPage} />);
   }
 }
 
