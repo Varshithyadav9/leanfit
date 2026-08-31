@@ -210,7 +210,7 @@ function AdminDashboard({ setPage }) {
           <p>Verify payments and deliver customer plans.</p>
         </div>
 
-        <div className="admin-header-actions"><Notifications items={adminNotifications} storageKey="leanfitAdminNotificationReads" title="Admin notifications" /><button className="secondary-btn" onClick={() => setPage("admin-feedback")}>Feedback</button><button className="secondary-btn" onClick={() => setPage("email-templates")}>Email Templates</button><button className="secondary-btn" onClick={() => setPage("welcome")}>Back to Website</button></div>
+        <div className="admin-header-actions"><Notifications items={adminNotifications} storageKey="leanfitAdminNotificationReads" title="Admin notifications" /><button className="secondary-btn" onClick={() => setPage("admin-coupons")}>Coupons</button><button className="secondary-btn" onClick={() => setPage("admin-feedback")}>Feedback</button><button className="secondary-btn" onClick={() => setPage("email-templates")}>Email Templates</button><button className="secondary-btn" onClick={() => setPage("welcome")}>Back to Website</button></div>
       </section>
 
       {message && <p className="muted">{message}</p>}

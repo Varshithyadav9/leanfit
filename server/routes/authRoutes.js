@@ -1,7 +1,8 @@
 import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
-import { registerCustomer, loginCustomer, requestPasswordReset, resetCustomerPassword, updateCustomerProfile, changeCustomerPassword } from "../controllers/authController.js";
+import { registerCustomer, loginCustomer, requestPasswordReset, resetCustomerPassword, updateCustomerProfile, changeCustomerPassword, loginAdmin } from "../controllers/authController.js";
 const router = express.Router();
+router.post("/admin/login", loginAdmin);
 router.post("/customer/register", registerCustomer);
 router.post("/customer/login", loginCustomer);
 router.post("/customer/forgot-password", requestPasswordReset);

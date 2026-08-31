@@ -115,3 +115,22 @@ export const changeCustomerPassword = async (req, res) => {
     return res.json({ success: true, message: "Password changed successfully." });
   } catch (error) { return res.status(500).json({ success: false, message: error.message || "Password update failed." }); }
 };
+
+export const loginAdmin = async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || "");
+    const adminEmail = normalizeEmail(process.env.ADMIN_EMAIL);
+    const adminPassword = String(process.env.ADMIN_PASSWORD || "");
+    if (!process.env.JWT_SECRET || !adminEmail || !adminPassword) {
+      return res.status(500).json({ success: false, message: "Admin login is not configured on the server." });
+    }
+    if (email !== adminEmail || password !== adminPassword) {
+      return res.status(401).json({ success: false, message: "Invalid email or password." });
+    }
+    const token = jwt.sign({ role: "admin", email: adminEmail }, process.env.JWT_SECRET, { expiresIn: "12h" });
+    return res.json({ success: true, token });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Admin login failed." });
+  }
+};

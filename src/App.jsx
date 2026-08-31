@@ -14,6 +14,7 @@ import Dashboard from "./components/Dashboard";
 import SuccessPage from "./components/SuccessPage";
 import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
+import AdminCoupons from "./components/AdminCoupons";
 import CustomerPortal from "./components/CustomerPortal";
 import CustomerAuth from "./components/CustomerAuth";
 import InfoPage from "./components/InfoPage";
@@ -238,6 +239,8 @@ if (location.pathname !== "/") {
 
     case "admin":
       return <AdminDashboard setPage={setPage} />;
+    case "admin-coupons":
+      return <AdminCoupons setPage={setPage} />;
     case "email-templates":
       return <EmailTemplates setPage={setPage} />;
     case "profile-settings":
