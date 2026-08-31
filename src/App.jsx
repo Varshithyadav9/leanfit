@@ -65,8 +65,8 @@ const setPage = (nextPage) => {
   }
 };
 
-const withSiteHeader = (content) => (<>
-  <SiteHeader setPage={setPage} />
+const withSiteHeader = (content, { showBrand = false } = {}) => (<>
+  <SiteHeader setPage={setPage} showBrand={showBrand} />
   {content}
 </>);
   const [generatedPlan, setGeneratedPlan] = useState("");
@@ -139,7 +139,7 @@ if (location.pathname !== "/") {
 }
   switch (page) {
     case "welcome":
-      return withSiteHeader(<WelcomePage setPage={setPage} />);
+      return withSiteHeader(<WelcomePage setPage={setPage} />, { showBrand: true });
 
     case "register":
       return withSiteHeader(
