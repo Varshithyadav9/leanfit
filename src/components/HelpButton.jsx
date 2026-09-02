@@ -150,13 +150,22 @@ function HelpButton({ variant = "default", navMode = false }) {
         .lf-chat-close {
           width: 30px;
           height: 30px;
-          border: 1px solid rgba(255,255,255,.28);
+          display: grid;
+          place-items: center;
+          flex: 0 0 30px;
+          border: 1px solid #ffffff;
           border-radius: 50%;
-          background: rgba(255,255,255,.08);
-          color: #fff;
+          background: #ffffff;
+          color: #0b172a;
           cursor: pointer;
-          font-size: 18px;
+          font-size: 20px;
+          font-weight: 800;
           line-height: 1;
+          box-shadow: 0 4px 12px rgba(0,0,0,.16);
+        }
+        .lf-chat-close:hover {
+          background: #eef5f0;
+          border-color: #eef5f0;
         }
         .lf-chat-messages {
           flex: 1;
@@ -249,14 +258,33 @@ function HelpButton({ variant = "default", navMode = false }) {
             bottom: max(14px, env(safe-area-inset-bottom));
           }
           .lf-chat-panel {
-            right: 10px;
-            bottom: calc(68px + env(safe-area-inset-bottom));
-            width: calc(100vw - 20px);
-            height: min(68dvh, 520px);
-            min-height: 390px;
+            inset: auto 8px calc(66px + env(safe-area-inset-bottom)) 8px;
+            width: auto;
+            height: min(72dvh, 540px);
+            min-height: 360px;
             border-radius: 18px;
           }
-          .lf-chat-head { padding: 12px 14px; }
+          .lf-chat-head {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 12px 12px 12px 14px;
+          }
+          .lf-chat-head-title { font-size: 16px; }
+          .lf-chat-head-sub { max-width: 250px; font-size: 11px; line-height: 1.35; }
+          .lf-chat-close {
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            display: grid;
+            place-items: center;
+            background: #ffffff;
+            color: #0b172a;
+            border-color: #ffffff;
+            font-size: 23px;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(0,0,0,.18);
+          }
           .lf-chat-messages { padding: 12px; }
           .lf-chat-quick { padding: 8px 10px; }
           .lf-chat-contact { padding: 0 10px 8px; }
@@ -269,10 +297,17 @@ function HelpButton({ variant = "default", navMode = false }) {
             box-shadow: 0 8px 24px rgba(9,25,43,.18);
           }
           .lf-chat-trigger:not(.nav-help) .lf-chat-trigger-label { display: none; }
-          .lf-chat-trigger.nav-help { min-height: 32px; padding: 6px 7px; font-size: 9px; white-space: nowrap; }
+          .lf-chat-trigger.nav-help {
+            min-height: 44px;
+            width: 100%;
+            justify-content: flex-start;
+            padding: 11px 13px;
+            font-size: 14px;
+            white-space: nowrap;
+          }
         }
         @media (max-width: 600px) and (max-height: 620px) {
-          .lf-chat-panel { height: calc(100dvh - 92px); min-height: 0; }
+          .lf-chat-panel { height: calc(100dvh - 82px); min-height: 0; }
         }
       `}</style>
 

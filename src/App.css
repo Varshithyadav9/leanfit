@@ -2498,3 +2498,217 @@ body, button, input, select, textarea {
   }
 }
 
+
+/* =========================================================
+   LEANFIT GLOBAL HEADER - MOBILE MENU FINAL FIX
+   Desktop: clean horizontal navigation.
+   Mobile: logo + hamburger, dropdown menu.
+   ========================================================= */
+.global-site-header {
+  position: relative;
+  z-index: 900;
+  width: min(1180px, calc(100% - 28px));
+  min-height: 74px;
+  margin: 0 auto;
+  padding: 10px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.global-site-header.nav-only {
+  min-height: 66px;
+  padding: 8px 2px;
+  justify-content: space-between;
+}
+
+.site-header-left {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.site-header-mini-brand {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.site-header-mini-brand img {
+  display: block;
+  width: 82px;
+  height: auto;
+}
+
+.global-site-header .site-header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin-left: auto;
+}
+
+.global-site-header .site-header-nav button,
+.global-site-header .site-header-nav .lf-chat-trigger.nav-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.global-site-header .site-header-nav .customer-login-link,
+.global-site-header .site-header-nav .admin-login-btn {
+  padding-inline: 13px;
+}
+
+.site-menu-toggle,
+.site-menu-backdrop {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .global-site-header,
+  .global-site-header.nav-only {
+    width: calc(100% - 22px);
+    min-height: 68px;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .global-site-header .welcome-brand-block {
+    gap: 0;
+  }
+
+  .global-site-header .welcome-brand-block .welcome-logo {
+    width: 88px;
+  }
+
+  .global-site-header .welcome-brand-author {
+    margin-left: 4px;
+    font-size: 7px;
+    letter-spacing: .75px;
+  }
+
+  .site-header-mini-brand img {
+    width: 64px;
+  }
+
+  .site-menu-toggle {
+    position: relative;
+    z-index: 904;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid #d8e1e7;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 5px 16px rgba(12, 23, 41, .07);
+    cursor: pointer;
+  }
+
+  .site-menu-toggle span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 999px;
+    background: #0c1729;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+
+  .site-menu-toggle.is-open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .site-menu-toggle.is-open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .site-menu-toggle.is-open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .global-site-header .site-header-nav,
+  .global-site-header.nav-only .site-header-nav {
+    position: absolute;
+    z-index: 903;
+    top: calc(100% - 2px);
+    right: 0;
+    width: min(310px, calc(100vw - 28px));
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid #dbe4e9;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 18px 45px rgba(9, 25, 43, .18);
+  }
+
+  .global-site-header .site-header-nav.is-open,
+  .global-site-header.nav-only .site-header-nav.is-open {
+    display: flex;
+  }
+
+  .global-site-header .site-header-nav button,
+  .global-site-header .site-header-nav .lf-chat-trigger.nav-help,
+  .global-site-header .site-header-nav button:first-child,
+  .global-site-header .site-header-nav button:nth-child(2) {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    justify-content: flex-start;
+    padding: 11px 13px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #0c1729;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .global-site-header .site-header-nav button:hover,
+  .global-site-header .site-header-nav .lf-chat-trigger.nav-help:hover {
+    background: #eef7f1;
+  }
+
+  .global-site-header .site-header-nav .customer-login-link,
+  .global-site-header .site-header-nav .admin-login-btn {
+    border: 1px solid #dbe4e9;
+    background: #fbfdfc;
+  }
+
+  .global-site-header .site-header-nav .admin-login-btn {
+    color: #126f3b;
+  }
+
+  .site-menu-backdrop {
+    position: fixed;
+    z-index: 901;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(6, 20, 31, .18);
+    padding: 0;
+  }
+}
